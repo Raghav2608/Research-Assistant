@@ -39,6 +39,23 @@ def parse_papers(papers_string:str) -> List[Dict[str, Any]]:
         entries.append(paper_data)
     return entries
 
+def summarise_papers(entries:List[Dict[str, Any]]) -> List[str]:
+    """
+    Summarises a list of paper entries into a list of strings 
+    containing the key information about each paper.
+    """
+    summarising_strings = []
+    for paper in entries:
+        paper_string = ""
+        paper_string += f"ID: {paper['id']}\n"
+        paper_string += f"Title: {paper['title']}\n"
+        paper_string += f"Summary: {paper['summary']}\n"
+        paper_string += f"Authors: {', '.join(paper['authors'])}\n"
+        paper_string += f"Published: {paper['published']}\n"
+        paper_string += f"PDF Link: {paper['pdf_link']}\n"
+        summarising_strings.append(paper_string)
+    return summarising_strings
+
 if __name__ == "__main__":
 
     search_query = "all:attention"
@@ -47,12 +64,8 @@ if __name__ == "__main__":
 
     xml_papers = fetch_arxiv_papers(search_query, start, max_results)
     entries = parse_papers(xml_papers)
-    
-    for paper in entries:
-        print("ID:", paper["id"])
-        print("Title:", paper["title"])
-        print("Summary:", paper["summary"])
-        print("Authors:", paper["authors"])
-        print("Published:", paper["published"])
-        print("PDF Link:", paper["pdf_link"])
+    summarising_strings = summarise_papers(entries)
+    for i, res in enumerate(summarising_strings):
+        print(f"Paper: {i+1}")
+        print(res)
         print("\n")
