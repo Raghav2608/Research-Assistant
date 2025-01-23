@@ -1,3 +1,7 @@
+"""
+Small script for testing the data ingestion pipeline for arXiv research papers.
+"""
+
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers, summarise_papers
 
 if __name__ == "__main__":
