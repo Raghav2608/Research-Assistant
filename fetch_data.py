@@ -21,5 +21,7 @@ if __name__ == "__main__":
         print(f"Paper: {i+1}")
         print(res)
         print("Number of characters (before processing):", len(res))
-        print("Number of characters (after processing):", len(text_preprocessor(res)))
+        res = text_preprocessor(res)
+        print(res)
+        print("Number of characters (after processing):", len(res))
         print("\n")
