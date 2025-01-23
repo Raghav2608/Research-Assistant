@@ -11,7 +11,7 @@ class TextPreprocessor:
                         self.keep_only_alphanumeric, 
                         self.extract_words,
                         self.remove_non_english_words,
-                        self.remove_repeated_words_and_adjacent_numbers
+                        self.remove_repeated_words_and_adjacent_numbers,
                         ]
     def remove_newlines(self, text:str) -> str:
         """
@@ -105,15 +105,20 @@ class TextPreprocessor:
         """
         The main method that applies all the text processing operations to the input text.
         - Applies the operations in a loop until the text stops changing.
-        
+
         Args:
             text (str): The text to process.
         """
         prev = None
-        while prev != text:
+        num_repeats = 0
+        while True:
+            prev = text
             text = self.remove_newlines(text)
             for operation in self.operations:
                 text = operation(text)
                 text = self.remove_newlines(text)
-            prev = text
+            num_repeats += 1
+            if text == prev:
+                break
+        print("NR", num_repeats)
         return text
