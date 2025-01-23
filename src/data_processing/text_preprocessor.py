@@ -21,13 +21,13 @@ class TextPreprocessor:
     
     def __call__(self, text:str) -> str:
         text = self.remove_newlines(text)
-        
-        text = self.remove_links(text)
-        text = self.remove_newlines(text)
 
-        text = self.remove_special_characters(text)
-        text = self.remove_newlines(text)
-
-        text = self.remove_non_english_words(text)
-        text = self.remove_newlines(text)
+        operations = [
+                    self.remove_links, 
+                    self.remove_special_characters, 
+                    self.remove_non_english_words
+                    ]
+        for operation in operations:
+            text = operation(text)
+            text = self.remove_newlines(text)
         return text
