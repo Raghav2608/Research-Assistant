@@ -17,7 +17,19 @@ class TextPreprocessor:
     
     def remove_non_english_words(self, text:str) -> str:
         split_text = text.split(" ")
-        english_words = [word for word in split_text if wordnet.synsets(word)]
+        english_words = []
+        for word in split_text:
+            if wordnet.synsets(word):
+                word_length = len(word)
+                if word_length > 1:
+                    english_words.append(word)
+                else:
+                    # Keep single letter words if they are "a" or "i" or a number
+                    is_numeric = word.isnumeric()
+                    is_a_or_i = (word.lower() == "a" or word.lower() == "i")
+                    if is_numeric or (word_length == 1 and is_a_or_i):
+                        english_words.append(word)
+                    
         return " ".join(english_words)
     
     def extract_words(self, text:str) -> str:
