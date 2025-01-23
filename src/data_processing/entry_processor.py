@@ -16,11 +16,29 @@ class EntryProcessor:
             raise ValueError("Entry 'summary' is not a string.")
         return True
     
-    def __call__(self, entry:Dict[str, Any]) -> Dict[str, Any]:
+    def summarise_entry(entry:Dict[str, Any]) -> str:
+        """
+        Summarises a paper entries into a string containing 
+        the key information about each paper.
+        
+        Args:
+            entry (Dict[str, Any]): The paper entry to summarise.
+        """
+        paper_string = ""
+        paper_string += f"ID: {entry['id']}\n"
+        paper_string += f"Title: {entry['title']}\n"
+        paper_string += f"Summary: {entry['summary']}\n"
+        paper_string += f"Authors: {', '.join(entry['authors'])}\n"
+        paper_string += f"Published: {entry['published']}\n"
+        paper_string += f"PDF Link: {entry['pdf_link']}\n"
+        paper_string += f"Content: {entry['content']}\n"
+        return paper_string
+    
+    def __call__(self, entry:Dict[str, Any]) -> str:
         """
         Processes the text content of an entry.
         """
         self.validate_entry(entry)
         entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
-        return entry
+        return self.summarise_entry(entry)
