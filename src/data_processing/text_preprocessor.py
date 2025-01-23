@@ -2,17 +2,21 @@ import re
 import nltk
 import wordninja
 from nltk.corpus import wordnet
+from src.data_processing.contextual_filtering import ContextualFilter
 nltk.download('wordnet')
 
 class TextPreprocessor:
     def __init__(self):
+        self.contextual_filter = ContextualFilter()
         self.operations = [
                         self.remove_links, 
                         self.keep_only_alphanumeric, 
                         self.extract_words,
                         self.remove_non_english_words,
                         self.remove_repeated_words_and_adjacent_numbers,
+                        lambda x: self.contextual_filter(x)
                         ]
+
     def remove_newlines(self, text:str) -> str:
         """
         Removes whitespace characters (spaces, tabs, newlines, etc.) 
