@@ -96,21 +96,25 @@ class TextPreprocessor:
     def __call__(self, text:str) -> str:
         """
         The main method that applies all the text processing operations to the input text.
-
+        - Applies the operations in a loop until the text stops changing.
+        
         Args:
             text (str): The text to process.
         """
-        text = self.remove_newlines(text)
-
-        operations = [
-                    self.remove_links, 
-                    self.keep_only_alphanumeric, 
-                    self.extract_words,
-                    self.remove_non_english_words,
-                    ]
-        for operation in operations:
-            text = operation(text)
+        prev = None
+        while prev != text:
             text = self.remove_newlines(text)
 
-        text = self.remove_repeated_words_and_adjacent_numbers(text)
+            operations = [
+                        self.remove_links, 
+                        self.keep_only_alphanumeric, 
+                        self.extract_words,
+                        self.remove_non_english_words,
+                        ]
+            for operation in operations:
+                text = operation(text)
+                text = self.remove_newlines(text)
+
+            text = self.remove_repeated_words_and_adjacent_numbers(text)
+            prev = text
         return text
