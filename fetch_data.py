@@ -7,7 +7,7 @@ from src.data_processing.text_preprocessor import TextPreprocessor
 
 if __name__ == "__main__":
 
-    search_query = "all:attention"
+    search_query = "all:transformer"
     start = 0
     max_results = 3
 
