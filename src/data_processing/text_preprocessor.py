@@ -5,6 +5,14 @@ from nltk.corpus import wordnet
 nltk.download('wordnet')
 
 class TextPreprocessor:
+    def __init__(self):
+        self.operations = [
+                        self.remove_links, 
+                        self.keep_only_alphanumeric, 
+                        self.extract_words,
+                        self.remove_non_english_words,
+                        self.remove_repeated_words_and_adjacent_numbers
+                        ]
     def remove_newlines(self, text:str) -> str:
         """
         Removes whitespace characters (spaces, tabs, newlines, etc.) 
@@ -104,17 +112,8 @@ class TextPreprocessor:
         prev = None
         while prev != text:
             text = self.remove_newlines(text)
-
-            operations = [
-                        self.remove_links, 
-                        self.keep_only_alphanumeric, 
-                        self.extract_words,
-                        self.remove_non_english_words,
-                        ]
-            for operation in operations:
+            for operation in self.operations:
                 text = operation(text)
                 text = self.remove_newlines(text)
-
-            text = self.remove_repeated_words_and_adjacent_numbers(text)
             prev = text
         return text
