@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     for i, res in enumerate(summarising_strings):
         print(f"Paper: {i+1}")
-        # print(res)
+        print(res)
         print("Number of characters (before processing):", len(res))
         print("Number of characters (after processing):", len(text_preprocessor(res)))
         print("\n")
