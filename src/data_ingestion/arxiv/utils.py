@@ -58,8 +58,16 @@ def parse_papers(papers_string:str) -> List[Dict[str, Any]]:
     result = xmltodict.parse(papers_string)
     entries = []
     for entry in result["feed"]["entry"]:
+        print(entry)
         # Find first link with a title of "pdf" and extract the URL
+        if not isinstance(entry, dict):
+            print("Skipping entry")
+            continue
         pdf_link = next(link["@href"] for link in entry["link"] if link.get("@title") == "pdf")
+        print(entry["author"])
+
+        if isinstance(entry["author"], dict):
+            entry["author"] = [entry["author"]]
         paper_data = {
             "id": entry["id"],
             "title": entry["title"],
