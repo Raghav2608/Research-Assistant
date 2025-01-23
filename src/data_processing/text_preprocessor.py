@@ -69,6 +69,30 @@ class TextPreprocessor:
         print(len(all_words))
         return " ".join(all_words)
     
+    def remove_repeated_words_and_adjacent_numbers(self, text:str) -> str:
+        """
+        Removes repeated words and numbers that are adjacent to each other.
+
+        Args:
+            text (str): The text to apply the operation to.
+        """
+        split_text = text.split(" ")
+        final_words = []
+        prev = None
+        for word in split_text:
+            
+            if prev == word: # Same word repeated
+                continue
+
+            if prev is not None:
+                if prev.isnumeric() and word.isnumeric(): # Numbers adjacent to each other
+                    continue
+
+            prev = word
+            final_words.append(word)
+
+        return " ".join(final_words)
+    
     def __call__(self, text:str) -> str:
         """
         The main method that applies all the text processing operations to the input text.
@@ -87,4 +111,6 @@ class TextPreprocessor:
         for operation in operations:
             text = operation(text)
             text = self.remove_newlines(text)
+
+        text = self.remove_repeated_words_and_adjacent_numbers(text)
         return text
