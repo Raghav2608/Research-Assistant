@@ -58,6 +58,7 @@ def parse_papers(papers_string:str) -> List[Dict[str, Any]]:
     result = xmltodict.parse(papers_string)
     entries = []
     for entry in result["feed"]["entry"]:
+        print(entry)
         # Find first link with a title of "pdf" and extract the URL
         pdf_link = next(link["@href"] for link in entry["link"] if link.get("@title") == "pdf")
         paper_data = {
