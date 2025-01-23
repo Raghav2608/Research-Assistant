@@ -5,8 +5,8 @@ nltk.download('wordnet')
 
 class TextPreprocessor:
     def remove_newlines(self, text:str) -> str:
-        return text.replace("\n", " ")
-    
+        return re.sub(r'\s+', ' ', text)
+
     def remove_special_characters(self, text:str) -> str:
         return re.sub(r"[^a-zA-Z0-9\s`~!@#$%^&*()_+\-=\[\]{};:'\"\\|,.<>/?]", "", text)
     
