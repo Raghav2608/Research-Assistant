@@ -1,8 +1,12 @@
-from transformers import BertTokenizer, BertModel
+import torch
 import numpy as np
+from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
 
 class ContextualFilter:
+    """
+    Class for filtering out words that are not relevant to the context of the text.
+    """
     def __init__(self):
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.model = BertModel.from_pretrained('bert-base-uncased')
@@ -11,10 +15,25 @@ class ContextualFilter:
         self.context_window = 10
         self.similarity_threshold = 0.1
     
-    def get_similarity(self, embedding1, embedding2):
+    def get_similarity(self, embedding1:torch.Tensor, embedding2:torch.Tensor) -> float:
+        """
+        Calculates the cosine similarity between two embeddings.
+
+        Args:
+            embedding1 (torch.Tensor): The first embedding.
+            embedding2 (torch.Tensor): The second embedding.
+        """
         return cosine_similarity(embedding1, embedding2)
 
     def __call__(self, text:str) -> str:
+        """
+        Keeps words that are relevant to the context of the text.
+        - Compares the similarity of the word's embedding with the embeddings of the words before and after it.
+        - If the similarity is above a certain threshold, the word is kept.
+
+        Args:
+            text (str): The text to filter.
+        """
         # Tokenize the text
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True) # TODO: Add chunking instead of truncation
 
