@@ -12,4 +12,5 @@ if __name__ == "__main__":
     for i, res in enumerate(summarising_strings):
         print(f"Paper: {i+1}")
         print(res)
+        print("Number of characters:", len(res))
         print("\n")
