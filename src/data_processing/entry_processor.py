@@ -5,16 +5,27 @@ from datetime import datetime
 class EntryProcessor:
     def __init__(self):
         self.text_preprocessor = TextPreprocessor()
+
+        self.entries_requirements = {
+                                    "id": str,
+                                    "title": str,
+                                    "summary": str,
+                                    "authors": list,
+                                    "published": str,
+                                    "pdf_link": str,
+                                    "content": str
+                                    }
     
-    def validate_entry(self, entry:Dict[str, Any]) -> bool: 
-        if "content" not in entry:
-            raise ValueError("Entry does not contain 'content' key.")
-        if not isinstance(entry["content"], str):
-            raise ValueError("Entry 'content' is not a string.")
-        if "summary" not in entry:
-            raise ValueError("Entry does not contain 'summary' key.")
-        if not isinstance(entry["summary"], str):
-            raise ValueError("Entry 'summary' is not a string.")
+    def validate_entry(self, entry:Dict[str, Any]) -> bool:
+        for key, value_type in self.entries_requirements.items():
+            if key not in entry:
+                raise ValueError(f"Entry is missing key: {key}")
+            if not isinstance(entry[key], value_type):
+                raise ValueError(f"Entry key: {key} has the wrong type: {type(entry[key])}, expected: {value_type}")
+        
+        if len(entry["authors"]) > 0:
+            if not all(isinstance(author, str) for author in entry["authors"]):
+                raise ValueError("Entry authors list contains non-string values")
         return True
     
     def summarise_entry(self, entry:Dict[str, Any]) -> str:
