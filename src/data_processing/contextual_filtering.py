@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
+from src.chunking.chunker import Chunker
 
 class ContextualFilter:
     """
@@ -11,6 +12,7 @@ class ContextualFilter:
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.model = BertModel.from_pretrained('bert-base-uncased')
         self.model.eval()
+        self.chunker = Chunker(chunk_size=512)
 
         self.context_window = 10
         self.similarity_threshold = 0.1
@@ -35,7 +37,8 @@ class ContextualFilter:
             text (str): The text to filter.
         """
         # Tokenize the text
-        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True) # TODO: Add chunking instead of truncation
+        inputs = self.chunker.get_chunks(text, return_as_text=False)[0] # Take first chunk (FOR NOW)
+
 
         # Get the embeddings from the model
         output = self.model(**inputs)
