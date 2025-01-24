@@ -3,9 +3,14 @@ from typing import Dict, Any
 from datetime import datetime
 
 class EntryProcessor:
+    """
+    Class for processing paper entries and standardising their structure.
+    - Ensures that the entries contain all the required keys and that the values have the correct types.
+    - Processes the text content of the entries.
+    - Summarises the information about each paper (entry) as a string.
+    """
     def __init__(self):
         self.text_preprocessor = TextPreprocessor()
-
         self.entries_requirements = {
                                     "id": str,
                                     "title": str,
@@ -16,7 +21,15 @@ class EntryProcessor:
                                     "content": str
                                     }
     
-    def validate_entry(self, entry:Dict[str, Any]) -> bool:
+    def validate_entry(self, entry:Dict[str, Any]) -> None:
+        """
+        Validates the structure of a paper entry.
+        - Ensures that the entry contains all the required keys
+          and that the values have the correct types.
+
+        Args:
+            entry (Dict[str, Any]): The paper entry to validate.
+        """
         for key, value_type in self.entries_requirements.items():
             if key not in entry:
                 raise ValueError(f"Entry is missing key: {key}")
@@ -26,7 +39,6 @@ class EntryProcessor:
         if len(entry["authors"]) > 0:
             if not all(isinstance(author, str) for author in entry["authors"]):
                 raise ValueError("Entry authors list contains non-string values")
-        return True
     
     def summarise_entry(self, entry:Dict[str, Any]) -> str:
         """
