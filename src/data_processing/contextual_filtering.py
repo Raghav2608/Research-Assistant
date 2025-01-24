@@ -28,7 +28,17 @@ class ContextualFilter:
         return cosine_similarity(embedding1, embedding2)
     
     def filter_based_on_context(self, all_tokens:torch.Tensor, all_embeddings:torch.Tensor) -> str:
+        """
+        Filters tokens based on their contextual embeddings.
+        - Processes a sequence of tokens and their corresponding embeddings,
+          retaining only those tokens that have a high similarity with their 
+          surrounding context.
+        - The first and last tokens are always kept.
 
+        Args:
+            all_tokens (torch.Tensor): The tokenized text.
+            all_embeddings (torch.Tensor): The embeddings corresponding to the tokens.
+        """
         keep_words = []
         num_tokens = all_tokens.size(1)
         for i in range(num_tokens):
@@ -90,12 +100,12 @@ class ContextualFilter:
             # Get the embeddings from the model
             output = self.model(**inputs)
             embeddings = output.last_hidden_state
-            print(embeddings.shape)
+            # print(embeddings.shape)
             all_embeddings.append(embeddings)
             all_tokens.append(inputs["input_ids"])
         all_embeddings = torch.cat(all_embeddings, dim=1) # [1, num_tokens, 768]
         all_tokens = torch.cat(all_tokens, dim=1) # [1, num_tokens]
-        print(all_embeddings.shape, all_tokens.shape)
+        # print(all_embeddings.shape, all_tokens.shape)
         
         filtered_text = self.filter_based_on_context(all_tokens=all_tokens, all_embeddings=all_embeddings)
         return filtered_text
