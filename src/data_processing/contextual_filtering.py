@@ -15,7 +15,7 @@ class ContextualFilter:
         self.chunker = Chunker(chunk_size=512)
 
         self.context_window = 10
-        self.similarity_threshold = -1.0 # Placeholder value
+        self.similarity_threshold = 0.5
     
     def get_similarity(self, embedding1:torch.Tensor, embedding2:torch.Tensor) -> float:
         """
@@ -60,12 +60,11 @@ class ContextualFilter:
 
             before_similarity = self.get_similarity(current_embedding, before_embedding)
             after_similarity = self.get_similarity(current_embedding, after_embedding)
-            
-            print("Word:", word)
-            print("Similarity with context before:", before_similarity)
-            print("Similarity with context after:", after_similarity)
+            # print("Word:", word)
+            # print("Similarity with context before:", before_similarity)
+            # print("Similarity with context after:", after_similarity)
 
-            if before_similarity > self.similarity_threshold or after_similarity > self.similarity_threshold:
+            if before_similarity > self.similarity_threshold and after_similarity > self.similarity_threshold:
                 keep_words.append(word)
         return " ".join(keep_words)
     

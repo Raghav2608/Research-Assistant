@@ -14,7 +14,6 @@ class TextPreprocessor:
                         self.extract_words,
                         self.remove_non_english_words,
                         self.remove_repeated_words_and_adjacent_numbers,
-                        lambda x: self.contextual_filter(x)
                         ]
 
     def remove_newlines(self, text:str) -> str:
@@ -125,4 +124,10 @@ class TextPreprocessor:
             if text == prev:
                 break
         print("NR", num_repeats)
+        
+        # Apply a single run of contextual filtering.
+        text = self.contextual_filter(text)
+        for operation in self.operations:
+            text = operation(text)
+            text = self.remove_newlines(text)
         return text
