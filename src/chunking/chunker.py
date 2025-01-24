@@ -6,7 +6,6 @@ class Chunker:
     def __init__(self, chunk_size:int=512):
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.chunk_size = chunk_size
-        self.stride = self.chunk_size // 2
 
     def convert_text_to_tokens(self, text:str) -> List[str]:
         """
@@ -21,12 +20,12 @@ class Chunker:
         print(len(tokens), len(tokens["input_ids"][0]), len(tokens["token_type_ids"][0]), len(tokens["attention_mask"][0]))
         return tokens
     
-    def get_chunks(self, text:str, return_as_text:bool=False) -> Union[List[str], List[torch.Tensor]]:
+    def get_chunks(self, text:str, return_as_text:bool=False, stride:int=512) -> Union[List[str], List[torch.Tensor]]:
         
         tokens = self.convert_text_to_tokens(text)
         num_tokens = len(tokens["input_ids"][0])
         chunks = []
-        for i in range(0, num_tokens, self.stride):
+        for i in range(0, num_tokens, stride):
             max_end = min(i + self.chunk_size, num_tokens)
             chunk_input_ids = tokens["input_ids"][0][i:max_end]            
             chunk_token_type_ids = tokens["token_type_ids"][0][i:max_end]
@@ -38,6 +37,6 @@ class Chunker:
             }
 
             if return_as_text:
-                chunk = self.tokenizer.decode(chunk)
+                chunk = [self.tokenizer.decode(token) for token in chunk_input_ids]
             chunks.append(chunk)
         return chunks

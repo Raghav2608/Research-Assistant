@@ -15,7 +15,7 @@ class ContextualFilter:
         self.chunker = Chunker(chunk_size=512)
 
         self.context_window = 10
-        self.similarity_threshold = 0.1
+        self.similarity_threshold = -1.0 # Placeholder value
     
     def get_similarity(self, embedding1:torch.Tensor, embedding2:torch.Tensor) -> float:
         """
@@ -26,44 +26,32 @@ class ContextualFilter:
             embedding2 (torch.Tensor): The second embedding.
         """
         return cosine_similarity(embedding1, embedding2)
+    
+    def filter_based_on_context(self, all_tokens:torch.Tensor, all_embeddings:torch.Tensor) -> str:
 
-    def __call__(self, text:str) -> str:
-        """
-        Keeps words that are relevant to the context of the text.
-        - Compares the similarity of the word's embedding with the embeddings of the words before and after it.
-        - If the similarity is above a certain threshold, the word is kept.
-
-        Args:
-            text (str): The text to filter.
-        """
-        # Tokenize the text
-        inputs = self.chunker.get_chunks(text, return_as_text=False)[0] # Take first chunk (FOR NOW)
-
-        # Get the embeddings from the model
-        output = self.model(**inputs)
-        embeddings = output.last_hidden_state
-        # print(embeddings.shape)
-        
         keep_words = []
-        for i, token in enumerate(inputs["input_ids"][0]):
+        num_tokens = all_tokens.size(1)
+        for i in range(num_tokens):
+            token = all_tokens[0][i].item()
             word = self.tokenizer.decode([token])
-            if i == 0 or i == len(inputs["input_ids"][0]) - 1:
+
+            if i == 0 or i == num_tokens - 1:
                 keep_words.append(word)
                 continue # Last and first tokens should be kept
             
             if i < self.context_window:
-                before_embedding = embeddings[0][:i].mean(dim=0).unsqueeze(0)
+                before_embedding = all_embeddings[0][:i].mean(dim=0).unsqueeze(0)
             else:
                 last_x_words = max(i-self.context_window, 0)
-                before_embedding = embeddings[0][last_x_words:i].mean(dim=0).unsqueeze(0)
+                before_embedding = all_embeddings[0][last_x_words:i].mean(dim=0).unsqueeze(0)
 
-            if (i + self.context_window) >= len(inputs["input_ids"][0]):
-                after_embedding = embeddings[0][i+1:].mean(dim=0).unsqueeze(0)
+            if (i + self.context_window) >= num_tokens:
+                after_embedding = all_embeddings[0][i+1:].mean(dim=0).unsqueeze(0)
             else:
-                next_x_words = min(i+self.context_window + 1, embeddings.size(1))
-                after_embedding = embeddings[0][i+1:next_x_words].mean(dim=0).unsqueeze(0)
+                next_x_words = min(i+self.context_window + 1, num_tokens)
+                after_embedding = all_embeddings[0][i+1:next_x_words].mean(dim=0).unsqueeze(0)
 
-            current_embedding = embeddings[0][i].unsqueeze(0).detach().numpy()
+            current_embedding = all_embeddings[0][i].unsqueeze(0).detach().numpy()
             before_embedding = before_embedding.detach().numpy()
             after_embedding = after_embedding.detach().numpy()
             # print("Current embedding shape:", current_embedding.shape, np.isnan(current_embedding).any())
@@ -77,6 +65,38 @@ class ContextualFilter:
             print("Similarity with context before:", before_similarity)
             print("Similarity with context after:", after_similarity)
 
-            if before_similarity > self.similarity_threshold and after_similarity > self.similarity_threshold:
+            if before_similarity > self.similarity_threshold or after_similarity > self.similarity_threshold:
                 keep_words.append(word)
         return " ".join(keep_words)
+    
+    def __call__(self, text:str) -> str:
+        """
+        Keeps words that are relevant to the context of the text.
+        - Compares the similarity of the word's embedding with the embeddings of the words before and after it.
+        - If the similarity is above a certain threshold, the word is kept.
+
+        Args:
+            text (str): The text to filter.
+        """
+        # Tokenize the text
+        chunks = self.chunker.get_chunks(
+                                        text, 
+                                        return_as_text=False, 
+                                        stride=self.chunker.chunk_size # Non-overlapping chunks
+                                        )
+        
+        all_embeddings = []
+        all_tokens = []
+        for inputs in chunks:
+            # Get the embeddings from the model
+            output = self.model(**inputs)
+            embeddings = output.last_hidden_state
+            print(embeddings.shape)
+            all_embeddings.append(embeddings)
+            all_tokens.append(inputs["input_ids"])
+        all_embeddings = torch.cat(all_embeddings, dim=1) # [1, num_tokens, 768]
+        all_tokens = torch.cat(all_tokens, dim=1) # [1, num_tokens]
+        print(all_embeddings.shape, all_tokens.shape)
+        
+        filtered_text = self.filter_based_on_context(all_tokens=all_tokens, all_embeddings=all_embeddings)
+        return filtered_text
