@@ -3,6 +3,7 @@ import numpy as np
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
 from src.chunking.chunker import Chunker
+from typing import List, Dict, Tuple
 
 class ContextualFilter:
     """
@@ -27,6 +28,31 @@ class ContextualFilter:
         """
         return cosine_similarity(embedding1, embedding2)
     
+    def get_embeddings_and_tokens_from_chunks(
+                                            self, 
+                                            chunks:List[Dict[str, torch.Tensor]]
+                                            ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Extracts the embeddings and tokens from the given chunks.
+
+        Args:
+            chunks (List[Dict[str, torch.Tensor]]): The chunks containing the 
+                                        
+        """
+        all_embeddings = []
+        all_tokens = []
+        for inputs in chunks:
+            # Get the embeddings from the model
+            output = self.model(**inputs)
+            embeddings = output.last_hidden_state
+            # print(embeddings.shape)
+            all_embeddings.append(embeddings)
+            all_tokens.append(inputs["input_ids"])
+        all_embeddings = torch.cat(all_embeddings, dim=1) # [1, num_tokens, 768]
+        all_tokens = torch.cat(all_tokens, dim=1) # [1, num_tokens]
+        # print(all_embeddings.shape, all_tokens.shape)
+        return all_embeddings, all_tokens
+
     def filter_based_on_context(self, all_tokens:torch.Tensor, all_embeddings:torch.Tensor) -> str:
         """
         Filters tokens based on their contextual embeddings.
@@ -87,25 +113,11 @@ class ContextualFilter:
         Args:
             text (str): The text to filter.
         """
-        # Tokenize the text
         chunks = self.chunker.get_chunks(
                                         text, 
                                         return_as_text=False, 
                                         stride=self.chunker.chunk_size # Non-overlapping chunks
                                         )
-        
-        all_embeddings = []
-        all_tokens = []
-        for inputs in chunks:
-            # Get the embeddings from the model
-            output = self.model(**inputs)
-            embeddings = output.last_hidden_state
-            # print(embeddings.shape)
-            all_embeddings.append(embeddings)
-            all_tokens.append(inputs["input_ids"])
-        all_embeddings = torch.cat(all_embeddings, dim=1) # [1, num_tokens, 768]
-        all_tokens = torch.cat(all_tokens, dim=1) # [1, num_tokens]
-        # print(all_embeddings.shape, all_tokens.shape)
-        
+        all_embeddings, all_tokens = self.get_embeddings_and_tokens_from_chunks(chunks)
         filtered_text = self.filter_based_on_context(all_tokens=all_tokens, all_embeddings=all_embeddings)
         return filtered_text
