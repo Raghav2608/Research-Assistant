@@ -1,5 +1,6 @@
 from src.data_processing.text_preprocessor import TextPreprocessor
 from typing import Dict, Any
+from datetime import datetime
 
 class EntryProcessor:
     def __init__(self):
@@ -16,7 +17,7 @@ class EntryProcessor:
             raise ValueError("Entry 'summary' is not a string.")
         return True
     
-    def summarise_entry(entry:Dict[str, Any]) -> str:
+    def summarise_entry(self, entry:Dict[str, Any]) -> str:
         """
         Summarises a paper entries into a string containing 
         the key information about each paper.
@@ -24,7 +25,9 @@ class EntryProcessor:
         Args:
             entry (Dict[str, Any]): The paper entry to summarise.
         """
+        current_time = datetime.now().strftime("%Y-%m-%d/%H:%M:%S") # YYYY-MM-DD HH:MM:SS
         paper_string = ""
+        paper_string += f"Time: {current_time}\n"
         paper_string += f"ID: {entry['id']}\n"
         paper_string += f"Title: {entry['title']}\n"
         paper_string += f"Summary: {entry['summary']}\n"
