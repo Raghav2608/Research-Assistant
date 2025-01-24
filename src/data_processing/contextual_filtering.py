@@ -39,7 +39,6 @@ class ContextualFilter:
         # Tokenize the text
         inputs = self.chunker.get_chunks(text, return_as_text=False)[0] # Take first chunk (FOR NOW)
 
-
         # Get the embeddings from the model
         output = self.model(**inputs)
         embeddings = output.last_hidden_state
