@@ -3,7 +3,17 @@ from transformers import BertTokenizer
 from typing import List, Union
 
 class Chunker:
+    """
+    A class used to separate chunks into smaller pieces by using
+    a tokenizer.
+    """
     def __init__(self, chunk_size:int=512):
+        """
+        Initialises a "Chunker" class object
+
+        Args:
+            chunk_size (int): The chunk size to use for chunking.
+        """
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.chunk_size = chunk_size
 
@@ -21,7 +31,14 @@ class Chunker:
         return tokens
     
     def get_chunks(self, text:str, return_as_text:bool=False, stride:int=512) -> Union[List[str], List[torch.Tensor]]:
-        
+        """
+        Converts a text string into chunks of tokens.
+
+        Args:
+            text (str): The text to convert into chunks.
+            return_as_text (bool): Whether to return the chunks as text strings. Defaults to False.
+            stride (int): The stride size to use for chunking. Defaults to 512.
+        """
         tokens = self.convert_text_to_tokens(text)
         num_tokens = len(tokens["input_ids"][0])
         chunks = []
