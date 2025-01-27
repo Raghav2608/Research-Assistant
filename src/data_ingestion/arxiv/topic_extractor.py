@@ -61,7 +61,8 @@ if __name__ == "__main__":
                 "What's the latest research in Deep Reinforcement Learning?",
                 "What are the top use cases of Generative AI?",
                 "What industries are benefiting the most from AI advancements?",
-                "How is Machine Learning transforming healthcare?"
+                "How is Machine Learning transforming healthcare",
+                "Are there any advancements in transformer models lately?"
                 ]
     out = topic_extractor(sentences)
     
