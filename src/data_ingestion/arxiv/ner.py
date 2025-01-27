@@ -29,7 +29,18 @@ if __name__ == "__main__":
     sentences = [
                 "What are the latest advancements in Computer Vision",
                 "What are the latest advancements in Artificial Intelligence",
-                "Is there anything new in Machine Learning that I should be aware of?"
+                "Is there anything new in Machine Learning that I should be aware of?",
+                "What are the current trends in Natural Language Processing?",
+                "Can you tell me about the recent innovations in Data Science?",
+                "What's the latest research in Deep Reinforcement Learning?",
+                "What are the top use cases of Generative AI?",
+                "What industries are benefiting the most from AI advancements?",
+                "How is Machine Learning transforming healthcare?"
                 ]
     out = ner(sentences)
-    print("Output", out)
+    
+    for i,(prompt, topic_answer) in enumerate(zip(sentences, out)):
+        print(f"Prompt number: {i}")
+        print(f"Prompt: {prompt}")
+        print(f"Answer: {topic_answer}")
+        print("\n")
