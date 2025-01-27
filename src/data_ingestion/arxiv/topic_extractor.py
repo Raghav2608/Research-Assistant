@@ -20,6 +20,15 @@ class TopicExtractor:
         prompt = f"Extract the main topic that the user is asking about in the sentence: {sentence}"
         return prompt
     
+    def postprocess_text(self, text:str) -> str:
+        """
+        Concatenates all words in the string and returns it in lower case.
+        """
+        text = text.split()
+        text = "".join(text) # Join all words into a single string
+        text = text.lower()
+        return text
+
     def get_result(self, sentence:str) -> str:
         """
         Finds the topic that the user is talking about inside of the sentence.
@@ -46,8 +55,9 @@ class TopicExtractor:
         """
         topics_per_sentence = []
         for sentence in sentences:
-            topics = self.get_result(sentence)
-            topics_per_sentence.append(topics)
+            topic = self.get_result(sentence)
+            topic = self.clean_text(topic)
+            topics_per_sentence.append(topic)
         return topics_per_sentence
 
 if __name__ == "__main__":
