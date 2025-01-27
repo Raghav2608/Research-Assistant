@@ -1,8 +1,9 @@
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from typing import List
-class NamedEntityRecognition:
+
+class TopicExtractor:
     """
-    Class for extracting named entities (topics) from sentences using a pre-trained T5 model.
+    Class for extracting topics from sentences using a pre-trained T5 model.
     """
     def __init__(self):
         model_name = "google/flan-t5-large"
@@ -50,7 +51,7 @@ class NamedEntityRecognition:
         return topics_per_sentence
 
 if __name__ == "__main__":
-    ner = NamedEntityRecognition()
+    topic_extractor = TopicExtractor()
     sentences = [
                 "What are the latest advancements in Computer Vision",
                 "What are the latest advancements in Artificial Intelligence",
@@ -62,7 +63,7 @@ if __name__ == "__main__":
                 "What industries are benefiting the most from AI advancements?",
                 "How is Machine Learning transforming healthcare?"
                 ]
-    out = ner(sentences)
+    out = topic_extractor(sentences)
     
     for i,(prompt, topic_answer) in enumerate(zip(sentences, out)):
         print(f"Prompt number: {i}")
