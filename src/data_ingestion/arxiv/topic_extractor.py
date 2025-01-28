@@ -56,7 +56,7 @@ class TopicExtractor:
         topics_per_sentence = []
         for sentence in sentences:
             topic = self.get_result(sentence)
-            topic = self.clean_text(topic)
+            topic = self.postprocess_text(topic)
             topics_per_sentence.append(topic)
         return topics_per_sentence
 
@@ -72,7 +72,8 @@ if __name__ == "__main__":
                 "What are the top use cases of Generative AI?",
                 "What industries are benefiting the most from AI advancements?",
                 "How is Machine Learning transforming healthcare",
-                "Are there any advancements in transformer models lately?"
+                "Are there any advancements in transformer models lately?",
+                "Are there any recent advancements in transformer models?"
                 ]
     out = topic_extractor(sentences)
     
