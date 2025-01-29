@@ -9,6 +9,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, extract_link
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 import getpass
 import os
 from dotenv import load_dotenv
@@ -24,7 +25,12 @@ xml_papers = fetch_arxiv_papers(search_query, start, max_results)
 links = extract_link(xml_papers)
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
-vector_store = InMemoryVectorStore(embeddings)
+#vector_store = InMemoryVectorStore(embeddings)
+
+""" when its time for deployment lets host chroma as a remote server ore deploy using docker """
+
+Persist_dir = "/shared_storage/chroma_db"
+vector_store = Chroma(persist_directory=Persist_dir, embedding_function=embeddings)
 
 # Load and chunk contents of the blog
 
@@ -32,11 +38,14 @@ for i in range(len(links)):
     loader = PyPDFLoader(links[i])
     docs = loader.load()
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     all_splits = text_splitter.split_documents(docs)
 
-    # Index chunks
-    _ = vector_store.add_documents(documents=all_splits)
+    # Index chunks into Chroma
+    _ = vector_store.add_documents(all_splits)
+
+# Save the Chroma database persistently
+vector_store.persist()
 
 # Define prompt for question-answering
 prompt = hub.pull("rlm/rag-prompt")
@@ -51,7 +60,9 @@ class State(TypedDict):
 
 # Define application steps
 def retrieve(state: State):
-    retrieved_docs = vector_store.similarity_search(state["question"])
+    retriever = vector_store.as_retriever()
+    retrieved_docs = retriever.get_relevant_documents(state["question"]) #note this still uses similarity search
+    #retrieved_docs = vector_store.similarity_search(state["question"])
     return {"context": retrieved_docs}
 
 
