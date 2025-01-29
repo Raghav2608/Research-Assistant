@@ -28,7 +28,7 @@ embeddings. ALTHOUGH not optimized for very large-scale datasets(billions of vec
 # pip install langchain-chroma
 from langchain_chroma import Chroma
 
-vector_db = Chroma.from_documents(all_splits, embeddings_model)
+vector_db = Chroma.from_documents(all_splits, embeddings_model, persist_directory="vector_db")
 
 """ OR USE FAISS, for large-scale datasets(millions or billions of vectors), very fast 
 nearest-neighbor searches. accuracy. although we will need to handle metadata storage and 
@@ -39,3 +39,6 @@ from langchain_commuinity.vectorstores import FAISS
 vector_db= FAISS.from_documents(all_splits, embeddings)
 
  """
+
+#explicitly save changes to disk
+vector_db.persist()
