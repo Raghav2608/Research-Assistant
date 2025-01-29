@@ -29,8 +29,10 @@ embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-b
 
 """ when its time for deployment lets host chroma as a remote server ore deploy using docker """
 
-Persist_dir = "/shared_storage/chroma_db"
-vector_store = Chroma(persist_directory=Persist_dir, embedding_function=embeddings)
+PERSIST_DIR = "chroma_db"
+os.makedirs(PERSIST_DIR, exist_ok=True)
+
+vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
 
 # Load and chunk contents of the blog
 
@@ -60,9 +62,12 @@ class State(TypedDict):
 
 # Define application steps
 def retrieve(state: State):
-    retriever = vector_store.as_retriever()
+    retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 2, "fetch_k": 4})
     retrieved_docs = retriever.get_relevant_documents(state["question"]) #note this still uses similarity search
     #retrieved_docs = vector_store.similarity_search(state["question"])
+    if not retrieved_docs:
+       return {"context": [], "answer": "No relevant documents found."}
+    
     return {"context": retrieved_docs}
 
 
@@ -80,7 +85,7 @@ graph_builder = StateGraph(State).add_sequence([retrieve, generate])
 graph_builder.add_edge(START, "retrieve")
 graph = graph_builder.compile()
 
-result = graph.invoke({"question": "What are transfromers?"})
+result = graph.invoke({"question": "What are transformers?"})
 
 print(f'Context: {result["context"]}\n\n')
 print(f'Answer: {result["answer"]}')
