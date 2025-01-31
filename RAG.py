@@ -6,7 +6,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langgraph.graph import START, StateGraph
 from typing_extensions import List, TypedDict
 from langchain_core.vectorstores import InMemoryVectorStore
-from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, extract_link
+from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, extract_link, extract_abstract, parse_papers
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
@@ -22,7 +22,8 @@ start = 0
 max_results = 3
 
 xml_papers = fetch_arxiv_papers(search_query, start, max_results)
-links = extract_link(xml_papers)
+entries = parse_papers(xml_papers)
+abstracts = extract_abstract(entries)
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 #vector_store = InMemoryVectorStore(embeddings)
@@ -35,19 +36,38 @@ os.makedirs(PERSIST_DIR, exist_ok=True)
 vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
 
 # Load and chunk contents of the blog
+'''
+"id": entry["id"],
+            "title": entry["title"],
+            "summary": entry["summary"].strip(),
+            "authors": [author["name"] for author in entry["author"]],
+            "published": entry["published"],
+            "pdf_link": pdf_link
+'''
+docs = []
+for entry in entries:
+    # convert the returned results to Document object and encoding all the metadata 
+    doc = Document(page_content=entry["summary"],metadata = {"title":entry["title"],
+                                                              "authors":entry["authors"],
+                                                              "published":entry["published"],
+                                                              "link":entry["pdf_link"]})
+    
+    # creating a list of documents 
+    docs.append(doc)
 
-for i in range(len(links)):
-    loader = PyPDFLoader(links[i])
-    docs = loader.load()
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     all_splits = text_splitter.split_documents(docs)
 
-    # Index chunks into Chroma
-    _ = vector_store.add_documents(all_splits)
+# Index chunks into Chroma
+_ = vector_store.add_documents(all_splits)
 
 # Save the Chroma database persistently
 vector_store.persist()
+
+# Save the Chroma database persistently
+vector_store.persist()
+# Index chunks
+
 
 # Define prompt for question-answering
 prompt = hub.pull("rlm/rag-prompt")

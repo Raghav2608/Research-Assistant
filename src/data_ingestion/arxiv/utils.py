@@ -22,26 +22,6 @@ def fetch_arxiv_papers(search_query:str, start:int, max_results:int) -> str:
     result = data.read().decode("utf-8")
     return result
 
-def extract_link(papers_string:str) -> List[Dict[str, Any]]:
-    """
-    Converts the XML result from the arXiv API into a list of dictionaries
-    containing the data from each paper.
-
-    Args:
-        papers_string (str): The XML string from the arXiv API.
-    """
-    result = xmltodict.parse(papers_string)
-    link_list = []
-    for entry in result["feed"]["entry"]:
-        print(entry)
-        # Find first link with a title of "pdf" and extract the URL
-        if not isinstance(entry, dict):
-            print("Skipping entry")
-            continue
-        pdf_link = next(link["@href"] for link in entry["link"] if link.get("@title") == "pdf")
-        link_list.append(pdf_link)
-    return link_list
-
 def fetch_and_extract_pdf_content(pdf_url:str):
     """
     Fetches and extracts the text content from a PDF file.
@@ -67,6 +47,7 @@ def fetch_and_extract_pdf_content(pdf_url:str):
         # print(text)
         paper_text += text + "\n"
     return paper_text
+
 
 def parse_papers(papers_string:str) -> List[Dict[str, Any]]:
     """
