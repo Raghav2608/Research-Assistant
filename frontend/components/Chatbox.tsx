@@ -1,4 +1,5 @@
 import { ChangeEvent, useState } from "react";
+import SendButton from "./SendButton";
 
 export default function Chatbox() {
   const [chatInput, setChatInput] = useState<string>("");
@@ -12,6 +13,7 @@ export default function Chatbox() {
           setChatInput(e.target.value);
         }}
       />
+      <SendButton chatInput={chatInput} setChatInput={setChatInput}/>
     </div>
   );
 }
