@@ -63,8 +63,7 @@ def generate_search_query(user_prompt:str):
         "If you don't know the answer,say I don't know "
         "don't know."
         "Here is an example for the query and response"
-        "Question: I want to find research on Deep Time series analysis and what deep learning techniques are being used currently for the same"
-        'Answer: (deep learning) AND (time series analysis) AND (survey OR review OR recent advancements)'
+        "If the"
         "\n\n"
         f"{user_prompt}"
     )
