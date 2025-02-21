@@ -148,6 +148,9 @@ class TextPreprocessor:
         """
         prev = None
         num_repeats = 0
+            
+        text = text.lower()
+        
         while True:
             prev = text
             text = self.remove_newlines(text)
