@@ -3,6 +3,10 @@ from src.data_processing.pipeline import DataProcessingPipeline
 from src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
 
 class DataPipeline:
+    """
+    The main data pipeline class that orchestrates the data ingestion and processing pipelines.
+    This class is responsible for fetching and processing data from various sources.
+    """
 
     def __init__(self):
         self.topic_extractor = TopicExtractor()
