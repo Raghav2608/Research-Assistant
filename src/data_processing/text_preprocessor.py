@@ -3,18 +3,26 @@ import nltk
 import wordninja
 from nltk.corpus import wordnet
 from src.data_processing.contextual_filtering import ContextualFilter
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
 nltk.download('wordnet')
+nltk.download('omw-1.4') # WordNet 1.4
+nltk.download("punkt_tab")
+nltk.download('averaged_perceptron_tagger') # For lemmatization
 
 class TextPreprocessor:
     def __init__(self):
         self.contextual_filter = ContextualFilter()
         self.operations = [
                         self.remove_links, 
-                        self.keep_only_alphanumeric, 
-                        self.extract_words,
+                        self.keep_only_alphanumeric,
+                        self.extract_words, # Splits concatenated words
                         self.remove_non_english_words,
+                        self.lemmatize,
                         self.remove_repeated_words_and_adjacent_numbers,
                         ]
+        self.lemmatizer = WordNetLemmatizer()
 
     def remove_newlines(self, text:str) -> str:
         """
@@ -103,6 +111,15 @@ class TextPreprocessor:
             final_words.append(word)
 
         return " ".join(final_words)
+    
+    def lemmatize(self, text:str) -> str:
+        """
+        Lemmatizes the words in the text (i.e., converts words to their base form).
+
+        Args:
+            text (str): The text to lemmatize.
+        """
+        return " ".join([self.lemmatizer.lemmatize(word) for word in word_tokenize(text)])
     
     def __call__(self, text:str) -> str:
         """
