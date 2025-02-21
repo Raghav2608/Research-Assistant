@@ -158,12 +158,12 @@ class TextPreprocessor:
             if text == prev:
                 break
         print("NR", num_repeats)
-        # print("Text before contextual filtering:\n", text)
+        print("Text before contextual filtering:\n", len(text), "!!!", text)
         
         # Apply a single run of contextual filtering.
         text = self.contextual_filter(text)
         for operation in self.operations:
             text = operation(text)
-            # print("Text:\n", text)
+            print("Text:\n", text)
             text = self.remove_newlines(text)
         return text
