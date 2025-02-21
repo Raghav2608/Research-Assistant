@@ -16,7 +16,7 @@ class DataProcessingPipeline:
             print("Number of characters (before processing):", len(paper_content))
 
             # Process the entry (in-place)
-            self.entry_processor(entry)
+            entries[i] = self.entry_processor(entry)
 
             processed_content = entry["content"]
             print(processed_content)

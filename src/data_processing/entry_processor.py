@@ -60,11 +60,14 @@ class EntryProcessor:
         paper_string += f"Content: {entry['content']}\n"
         return paper_string
     
-    def __call__(self, entry:Dict[str, Any]) -> str:
+    def __call__(self, entry:Dict[str, Any]) -> Dict[str, Any]:
         """
         Processes the text content of an entry.
+
+        Args:
+            entry (Dict[str, Any]): The paper entry to process.
         """
         self.validate_entry(entry)
         entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
-        return self.summarise_entry(entry)
+        return entry
