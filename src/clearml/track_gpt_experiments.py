@@ -7,7 +7,7 @@ import json
 # Initialise ClearML Task
 task = Task.init(
     project_name="GAP Generative Model",
-    task_name="GPT-3.5 Experiment Tracking",
+    task_name="GPT-4omini Experiment Tracking",
     output_uri=True
 )
 
@@ -23,7 +23,7 @@ client = OpenAI()
 
 # Track hyperparameters
 params = {
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "temperature": 0.7,
     "max_tokens": 500,
     "top_p": 0.9,
@@ -82,6 +82,6 @@ if __name__ == "__main__":
         json.dump(results, f)
 
     # Upload artifact to ClearML
-    task.upload_artifact("GPT-3.5 Responses", artifact_object=json_path)
+    task.upload_artifact("GPT-4o Responses", artifact_object=json_path)
 
     task.close()
