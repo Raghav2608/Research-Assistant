@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 # Initialise a ClearML task for comparison
 task = Task.init(
     project_name="GAP Generative Model",
-    task_name="GPT-3.5 Experiment Comparison"
+    task_name="GPT-4o-mini Experiment Comparison"
 )
 
 # Retrieve stored experiment tracking task
-experiment_task = Task.get_task(project_name="GAP Generative Model", task_name="GPT-3.5 Experiment Tracking")
+experiment_task = Task.get_task(project_name="GAP Generative Model", task_name="GPT-4o-mini Experiment Tracking")
 
 if experiment_task is None:
-    raise ValueError("Could not find the GPT-3.5 Experiment Tracking task in ClearML!")
+    raise ValueError("Could not find the GPT-4o Experiment Tracking task in ClearML!")
 
 # Retrieve stored results from the experiment's artifacts
-artifact_name = "GPT-3.5 Responses"
+artifact_name = "GPT-4o Responses"
 if artifact_name not in experiment_task.artifacts:
     raise ValueError(f"Artifact '{artifact_name}' not found in the experiment tracking task.")
 
@@ -36,7 +36,7 @@ plt.bar(prompts, latencies, color="blue")
 plt.xlabel("Prompts")
 plt.ylabel("Response Time (sec)")
 plt.xticks(rotation=45, ha="right", fontsize=8)
-plt.title("GPT-3.5 Latency per Prompt")
+plt.title("GPT-4o Latency per Prompt")
 plt.tight_layout()
 plt.show()
 
