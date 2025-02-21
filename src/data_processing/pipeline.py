@@ -18,8 +18,9 @@ class DataProcessingPipeline:
         Args:
             entries (Dict[str, Any]): The structured paper entries to process.
         """
-        start_time = time.perf_counter()
+        time_takens = []
         for i, entry in enumerate(entries):
+            start_time = time.perf_counter()
             print(f"Paper: {i+1}")
             paper_content = entry["content"]
             print(paper_content)
@@ -32,7 +33,11 @@ class DataProcessingPipeline:
             print(processed_content)
             print("Number of characters (after processing):", len(processed_content))
             print("\n")
-
-        end_time = time.perf_counter()
-        print(f"Time taken: {end_time-start_time:.2f} seconds")
+            end_time = time.perf_counter()
+            time_takens.append(end_time-start_time)
+        
+        for i in range(len(entries)):
+            print(f"Time taken for paper {i+1}: {time_takens[i]:.2f} seconds")
+        print(f"Average time taken per paper: {sum(time_takens)/len(entries):.2f} seconds")
+        print(f"Total time taken: {sum(time_takens):.2f} seconds")
         return entries
