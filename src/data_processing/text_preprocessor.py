@@ -8,6 +8,7 @@ from nltk.stem import WordNetLemmatizer
 
 nltk.download('wordnet')
 nltk.download('omw-1.4') # WordNet 1.4
+nltk.download('stopwords')
 nltk.download("punkt_tab")
 nltk.download('averaged_perceptron_tagger') # For lemmatization
 
