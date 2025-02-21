@@ -1,14 +1,19 @@
 import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+from wordcloud import WordCloud, STOPWORDS
 from nltk.tokenize import word_tokenize
-from nltk.corpus import wordnet
+from nltk.corpus import wordnet, stopwords
 from src.data_processing.entry_processor import EntryProcessor
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers
 import nltk
+import string
 
-# Download NLTK resources
 nltk.download('punkt')
 nltk.download('wordnet')
+nltk.download('stopwords')
+
+# Get English stopwords from NLTK
+english_stopwords = set(stopwords.words('english'))
+combined_stopwords = english_stopwords.union(STOPWORDS)
 
 def run_eda(entries):
     """
@@ -18,16 +23,16 @@ def run_eda(entries):
         entries (list[dict]): List of processed paper entries.
     """
     # Analyses text lengths
-    lengths = [len(entry["content"]) for entry in entries]
+    lengths = [len(entry["content"]) for entry in entries if entry["content"]]
     plt.hist(lengths, bins=30, edgecolor="black", alpha=0.7)
     plt.title("Text Length Distribution")
     plt.xlabel("Length of Content")
     plt.ylabel("Frequency")
     plt.show()
 
-    # Generates word cloud for content
+    # Generate word cloud for content, excludes stopwords
     all_text = " ".join([entry["content"] for entry in entries if entry["content"]])
-    wordcloud = WordCloud(width=800, height=400).generate(all_text)
+    wordcloud = WordCloud(width=800, height=400, stopwords=combined_stopwords).generate(all_text)
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation="bilinear")
     plt.axis("off")
@@ -41,20 +46,21 @@ def run_eda(entries):
     print(f"Max tokens: {max(token_counts)}")
     print(f"Min tokens: {min(token_counts)}")
 
-    # Example: List most common words
+    # List most common words
     all_words = word_tokenize(all_text)
-    word_freq = nltk.FreqDist(all_words)
-    print("\nMost Common Words:")
+    filtered_words = [word.lower() for word in all_words if word.lower() not in combined_stopwords and word.isalpha()]
+    word_freq = nltk.FreqDist(filtered_words)
+    print("\nMost Common Words (excluding stopwords):")
     for word, freq in word_freq.most_common(10):
         print(f"{word}: {freq}")
 
 if __name__ == "__main__":
-    # Step 1: Parameters for fetching papers
+    # Parameters for fetching papers
     search_query = "all:transformer"  # Example query
     start = 0
     max_results = 10  # 10 papers for analysis
 
-    # Fetch and parse papers dynamically
+    # Fetch and parse papers
     xml_papers = fetch_arxiv_papers(search_query, start, max_results)
     entries = parse_papers(xml_papers)
 
