@@ -1,7 +1,7 @@
 import re
 import nltk
 import wordninja
-from nltk.corpus import wordnet
+from nltk.corpus import wordnet, stopwords
 from src.data_processing.contextual_filtering import ContextualFilter
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -19,10 +19,12 @@ class TextPreprocessor:
                         self.keep_only_alphanumeric,
                         self.extract_words, # Splits concatenated words
                         self.remove_non_english_words,
+                        self.remove_stopwords,
                         self.lemmatize,
                         self.remove_repeated_words_and_adjacent_numbers,
                         ]
         self.lemmatizer = WordNetLemmatizer()
+        self.english_stopwords = set(stopwords.words('english')) # English stopwords
 
     def remove_newlines(self, text:str) -> str:
         """
@@ -120,6 +122,20 @@ class TextPreprocessor:
             text (str): The text to lemmatize.
         """
         return " ".join([self.lemmatizer.lemmatize(word) for word in word_tokenize(text)])
+    
+    def remove_stopwords(self, text:str) -> str:
+        """
+        Removes English stopwords from the text.
+
+        Args:
+            text (str): The text to remove stopwords from.
+        """
+        all_words = text.split(" ")
+        filtered_words = []
+        for word in all_words:
+            if word.lower() not in self.english_stopwords:
+                filtered_words.append(word)
+        return " ".join(filtered_words)
     
     def __call__(self, text:str) -> str:
         """
