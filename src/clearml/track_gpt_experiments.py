@@ -32,7 +32,7 @@ params = {
 }
 task.connect(params)
 
-# Log GPT-3.5 responses
+# Log GPT-4o responses
 def log_gpt_experiment(prompt, iteration):
     logger = Logger.current_logger()
 
