@@ -88,7 +88,7 @@ def search_and_document(search_query: str, limit=5):
             break
         # convert to Document object or do your existing logic
         doc = Document(
-            page_content=entry["content"],
+            page_content=entry["content"],   # Use entry["summary"] to skip parsing
             metadata={
                 "title": entry["title"],
                 "published": entry["published"],
