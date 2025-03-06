@@ -67,7 +67,6 @@ combined_memory = CombinedMemory(
     memories=[summary_memory, window_memory]
 )
 
-co
 
 # Define Query Generator
 @tool(response_format="content")
