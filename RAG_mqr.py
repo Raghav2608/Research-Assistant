@@ -8,6 +8,7 @@ from langchain_community.vectorstores import Chroma
 #from langchain_chroma import Chroma
 import getpass
 import os
+import shutil
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -16,7 +17,8 @@ from langchain_core.messages import SystemMessage
 from langchain.retrievers import EnsembleRetriever, BM25Retriever, MultiQueryRetriever
 import logging
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from langchain.chains import LLMChain, ConversationalRetrievalChain
+from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
 import json
 
 # To see the query generated
@@ -33,11 +35,39 @@ llm = ChatOpenAI(model="gpt-4o-mini")
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
 PERSIST_DIR = "chroma_db"
+#if os.path.exists(PERSIST_DIR):
+  #  shutil.rmtree(PERSIST_DIR)
 os.makedirs(PERSIST_DIR, exist_ok=True)
 
 vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
 
+ # Initialize Vector Store Retriever
+vector_retriever = vector_store.as_retriever(
+        search_type="mmr",
+        search_kwargs={"k": 4, "fetch_k": 4}
+    )
 
+summary_memory = ConversationSummaryMemory(
+    llm=llm,
+    memory_key="summary_history",
+    input_key="question",    # The name of the user input in chain
+    output_key="text"      # The name of the chain's output
+)
+
+# Keep the last N exchanges in full
+window_memory = ConversationBufferWindowMemory(
+    k=3,                     # number of most recent exchanges to keep 
+    memory_key="window_history",
+    input_key="question",
+    output_key="text"
+)
+
+# Combined memory 
+combined_memory = CombinedMemory(
+    memories=[summary_memory, window_memory]
+)
+
+co
 
 # Define Query Generator
 @tool(response_format="content")
@@ -88,7 +118,7 @@ def search_and_document(search_query: str, limit=5):
             break
         # convert to Document object or do your existing logic
         doc = Document(
-            page_content=entry["content"],   # Use entry["summary"] to skip parsing
+            page_content=entry["summary"],   # Use entry["summary"] to skip parsing
             metadata={
                 "title": entry["title"],
                 "published": entry["published"],
@@ -124,7 +154,7 @@ import urllib
 
 def clean_search_query(search_query: str) -> str:
     """Encode the query so it doesn't contain invalid URL chars."""
-    # Instead of just replacing spaces with '+', let's do a robust encoding:
+    # Instead of just replacing spaces with '+', let's do a robust encoding
     return urllib.parse.quote_plus(search_query)
 
 
@@ -157,7 +187,7 @@ def retrieve(user_query: str):
 
     docs = []
     for query in generated_queries:
-        # 'clean_search_query' presumably sanitizes or modifies the docs 
+        # clean_search_query' presumably sanitizes or modifies the docs 
         # so they can be safely used in the next steps
         safe_query = clean_search_query(query)
         docs.extend(search_and_document(safe_query))
@@ -170,11 +200,6 @@ def retrieve(user_query: str):
 
     split_and_add_documents(docs)
 
-    # Initialize Vector Store Retriever
-    vector_retriever = vector_store.as_retriever(
-        search_type="mmr",
-        search_kwargs={"k": 4, "fetch_k": 4}
-    )
     keyword_retriever = BM25Retriever.from_documents(docs) if docs else None
 
     # Combine into Hybrid Retriever
@@ -263,8 +288,13 @@ answer_prompt = PromptTemplate(
 )
 
 # LLMChain for the final QA step
-qa_chain = LLMChain(llm=llm, prompt=answer_prompt)
+qa_chain = LLMChain(llm=llm, prompt=answer_prompt, memory=combined_memory)
 
+def ask_with_context(context, question):
+     return {
+       "context": context,
+       "question": question
+    }
 # retrieval + final answer generation
 @tool()
 def answer_with_rag(user_query: str):
@@ -294,14 +324,19 @@ def answer_with_rag(user_query: str):
     print(context_text)
     print("=== END CONTEXT ===")
 
-    answer = qa_chain.run({"context": context_text, "question": user_query})
+
+
+    answer = qa_chain.run(ask_with_context(context_text, user_query))
     return answer
 
 
 if __name__ == "__main__":
-    test_query = "Recent developments in AI in healthcare "
-    final_answer = answer_with_rag(test_query)
-    print("=== Final Answer ===")
-    print(final_answer)
+    while True:
+        user_input = input("User: ")
+        if user_input.lower() in ["exit", "quit", "end"]:
+            break
+        final_answer = answer_with_rag(user_input)
+        print("=== Final Answer ===")
+        print("Researcher: ",final_answer)
 
 
