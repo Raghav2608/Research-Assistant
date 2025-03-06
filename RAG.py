@@ -24,36 +24,11 @@ if not os.environ.get("OPENAI_API_KEY"):
 llm = ChatOpenAI(model="gpt-4o-mini")
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
-'''
-search_query = "all:transformers+machine+learning+review"
-start = 0
-max_results = 25
-
-xml_papers = fetch_arxiv_papers(search_query, start, max_results)
-entries = parse_papers(xml_papers)
-'''
-
-#vector_store = InMemoryVectorStore(embeddings)
-
-""" when its time for deployment lets host chroma as a remote server ore deploy using docker """
-
 PERSIST_DIR = "chroma_db"
 os.makedirs(PERSIST_DIR, exist_ok=True)
 
 vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
 
-'''
-# Load and chunk contents of the blog
-docs = []
-for entry in entries:
-    # convert the returned results to Document object and encoding all the metadata 
-    doc = Document(page_content=entry["summary"],metadata = {"title":entry["title"],
-                                                              "published":entry["published"],
-                                                              "link":entry["pdf_link"]})
-    
-    # creating a list of documents 
-    docs.append(doc)
-'''
 @tool(response_format="content")
 def generate_search_query(user_prompt:str):
     """Generate answer."""
@@ -61,9 +36,6 @@ def generate_search_query(user_prompt:str):
         "You are research searching agent your job is to generate effective research queries from given user prompts"
         "that can be put into a research database for searching relevant papers, only give a single query and no explanation"
         "If you don't know the answer,say I don't know "
-        "don't know."
-        "Here is an example for the query and response"
-        "If the"
         "\n\n"
         f"{user_prompt}"
     )
@@ -91,17 +63,8 @@ def split_and_add_documents(docs:list[Document]):
     all_splits = text_splitter.split_documents(docs)
     
     # Index chunks into Chroma
-    _ = vector_store.add_documents(all_splits)
+    vector_store.add_documents(all_splits)
 
-
-
-'''
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-all_splits = text_splitter.split_documents(docs)
-  
-# Index chunks into Chroma
-_ = vector_store.add_documents(all_splits)
-'''
 
 def clean_search_query(search_query:str):
     search_query = search_query.replace(" ","+")
@@ -178,30 +141,3 @@ def generate(state: MessagesState):
     # Run
     response = llm.invoke(prompt)
     return {"messages": [response]}
-
-
-
-
-
-
-
-'''
-def generate(state: State):
-    print(len(state["context"]))
-    docs_content = "\n\n".join(doc.page_content for doc in state["context"])
-    messages = prompt.invoke({"question": state["question"], "context": docs_content})
-    response = llm.invoke(messages)
-    {"answer": response.content}
-    return  {"answer": response.content}
-
-
-# Compile application and test
-graph_builder = StateGraph(State).add_sequence([retrieve, generate])
-graph_builder.add_edge(START, "retrieve")
-graph = graph_builder.compile()
-
-result = graph.invoke({"question": "What are transformers?"})
-
-print(f'Context: {result["context"]}\n\n')
-print(f'Answer: {result["answer"]}')
-'''
