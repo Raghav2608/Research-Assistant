@@ -77,7 +77,6 @@ def parse_papers(papers_string:str) -> List[Dict[str, Any]]:
             "authors": [author["name"] for author in entry["author"]],
             "published": entry["published"],
             "pdf_link": pdf_link,
-            "content": fetch_and_extract_pdf_content(pdf_link)
         }
         entries.append(paper_data)
     return entries

@@ -16,6 +16,7 @@ from langchain.retrievers import BM25Retriever, EnsembleRetriever
 
 # Ingestion utils ( existing code for fetching from arXiv)
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers
+from keybert import KeyBERT
 
 load_dotenv()
 os.environ['USER_AGENT'] = 'myagent'
@@ -28,6 +29,7 @@ logging.getLogger().setLevel(logging.INFO)
 # Initialize models
 small_llm = ChatOpenAI(model="gpt-4o-mini")   # cheaper or smaller model
 big_llm   = ChatOpenAI(model="gpt-4o-mini")     # larger model
+query_gen_llm = ChatOpenAI(model="gpt-4o-mini") # query_generator
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 
@@ -57,6 +59,41 @@ def search_and_document(search_query: str, limit=5):
         )
         docs.append(doc)
     return docs
+
+def generate_query(user_query:str):
+    query_prompt_template = PromptTemplate(
+    template="""
+    "You are an intelligent query generation assistant specialized in formulating precise search queries for the Semantic Scholar API. Your task is to convert natural language search prompts into well-structured queries that maximize relevance and accuracy. 
+    Ensure that:
+    1) ONLY Boolean operators (AND, OR, NOT) are used effectively to refine search results.
+    2) Unnecessary words are removed, ensuring the query remains concise and precise.
+    3) Assumptions are made logically when the user's query is vague, but clarification is requested when needed.
+    4) MOST IMPORTANT: dont cover every aspect of the query, if the query is very specific keep your query general
+
+    Example 1: Basic Topic Search
+    User Input:
+    Find papers on reinforcement learning in robotics.
+    
+    Output :
+    reinforcement learning AND robotics
+
+    Example 2: Multi-constraint Search
+    User Input:
+    I’m looking for research papers on the use of Graph Neural Networks (GNNs) in drug discovery."
+
+    ChatGPT Output (ArXiv Query):
+    Graph Neural Networks AND drug discovery
+
+    So here is the actual input:
+    {user_query}
+
+    """,
+        input_variables=["user_query"]
+    )
+    
+    query_chain = LLMChain(llm=query_gen_llm,prompt=query_prompt_template)
+    return query_chain.invoke({"user_query": user_query})["text"]
+
 
 def split_and_add_documents(docs: list[Document]):
     """Chunk docs, embed, and add to Chroma DB."""
@@ -92,7 +129,7 @@ def retrieve(user_query: str):
     split_and_add_documents(docs)
 
     # Create a retriever
-    vector_retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 4})
+    vector_retriever = vector_store.as_retriever(search_type="mmr", search_kwargs={"k": 10})
 
     retrieved_docs = vector_retriever.invoke(user_query)
 
@@ -146,8 +183,11 @@ and directly addresses the user's question. Provide a final, high-quality answer
     input_variables=["context", "draft_answer"]
 )
 
+
+
 draft_chain = LLMChain(llm=small_llm, prompt=draft_prompt_template)
 refine_chain = LLMChain(llm=big_llm,   prompt=refine_prompt_template)
+
 
 @tool()
 def answer_with_speculative_rag(user_query: str):
@@ -157,13 +197,17 @@ def answer_with_speculative_rag(user_query: str):
     3) Use a bigger LLM to refine/correct the draft
     4) Return the final refined answer
     """
-    response_dict = retrieve(user_query)
+    iterations = 5
+    llm_query = generate_query(user_query)
+    print(llm_query)
+    response_dict = retrieve(llm_query)
     docs = response_dict["artifact"]
+    
     if not docs:
         return response_dict["content"]  # "No relevant docs" or error msg
 
     # Combine top docs into a single context
-    top_docs = docs[:3]  # limit how many docs to pass
+    top_docs = docs[:10]  # limit how many docs to pass
     context_text = "\n\n".join(doc.page_content for doc in top_docs)
 
     # Produce a draft
@@ -180,7 +224,10 @@ def answer_with_speculative_rag(user_query: str):
 
 # Example
 if __name__ == "__main__":
-    test_query = "Recent developments with AI in healthcare"
+    test_query = '''
+    I am researching how deep learning can be applied to the early detection of neurodegenerative diseases such as Alzheimer's and Parkinson's. I am particularly interested in papers that discuss convolutional neural networks (CNNs) or transformer-based models for medical image analysis, especially MRI or CT scans. The papers should focus on explainability and feature extraction techniques rather than just model performance. I would also prefer research published after 2021 and categorized under either Machine Learning (cs.LG) or Medical Imaging (eess.IV)
+
+    '''
     final_answer = answer_with_speculative_rag(test_query)
     print("=== Final Answer ===")
     print(final_answer)

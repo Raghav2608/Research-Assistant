@@ -26,6 +26,7 @@ logging.basicConfig()
 logging.getLogger('langchain.retrievers.multi_query').setLevel(logging.INFO)
 
 
+
 load_dotenv()
 os.environ['USER_AGENT'] = 'myagent'
 if not os.environ.get("OPENAI_API_KEY"):
@@ -106,7 +107,7 @@ def generate_search_query(user_prompt: str):
 # Function to fetch and process documents
 def search_and_document(search_query: str, limit=5):
     start = 0
-    max_results = 5  # or bigger if you want
+    max_results = 100 # or bigger if you want
     xml_papers = fetch_arxiv_papers(search_query, start, max_results)
     entries = parse_papers(xml_papers)
 
@@ -140,15 +141,6 @@ def split_and_add_documents(docs:list[Document]):
         # Index chunks into Chroma
         vector_store.add_documents(all_splits)
 
-
-
-'''
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=0)
-all_splits = text_splitter.split_documents(docs)
-  
-# Index chunks into Chroma
-_ = vector_store.add_documents(all_splits)
-'''
 import urllib
 
 def clean_search_query(search_query: str) -> str:
@@ -186,7 +178,7 @@ def retrieve(user_query: str):
 
     docs = []
     for query in generated_queries:
-        # clean_search_query' presumably sanitizes or modifies the docs 
+        # clean_search_query sanitizes or modifies the docs 
         # so they can be safely used in the next steps
         safe_query = clean_search_query(query)
         docs.extend(search_and_document(safe_query))
@@ -214,7 +206,7 @@ def retrieve(user_query: str):
             template="""
         You are an AI search agent that creates multiple queries for the user question.
         User question: {question}
-        Generate 2 different search queries that might retrieve relevant documents.
+        Generate 1 search query that might retrieve relevant documents.
         """,
         input_variables=["question"]
     )
@@ -254,19 +246,6 @@ def retrieve(user_query: str):
     }
 
 
-
-#answer_prompt_template = """
-#You are a helpful research assistant. 
-# Below are relevant excerpts from academic papers:
-
-#{context}
-
-#The user has asked the following question:
-#{question}
-
-#Please provide a concise, well-structured answer based on the above context.
-#"""
-
 answer_prompt_template = """
 You are a helpful research assistant. 
 Below are relevant excerpts from academic papers:
@@ -294,6 +273,7 @@ def ask_with_context(context, question):
        "context": context,
        "question": question
     }
+
 # retrieval + final answer generation
 @tool()
 def answer_with_rag(user_query: str):
@@ -322,8 +302,6 @@ def answer_with_rag(user_query: str):
     print("=== CONTEXT TEXT ===")
     print(context_text)
     print("=== END CONTEXT ===")
-
-
 
     answer = qa_chain.run(ask_with_context(context_text, user_query))
     return answer
