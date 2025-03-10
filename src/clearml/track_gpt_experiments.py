@@ -77,7 +77,7 @@ if __name__ == "__main__":
         results["responses"].append(log_gpt_experiment(prompt, i + 1))
 
     # Save results to JSON 
-    json_path = os.path.join(task.get_logger().get_log_directory(), "gpt3_responses.json")
+    json_path = os.path.join(task.get_logger().get_log_directory(), "gpt4_responses.json")
     with open(json_path, "w") as f:
         json.dump(results, f)
 
