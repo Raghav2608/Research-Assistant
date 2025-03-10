@@ -26,9 +26,9 @@ with open(dataset_path, "r") as f:
     results = json.load(f)
 
 # Extract data for analysis
-latencies = [r["latency"] for r in results["responses"]]
-tokens = [r["tokens"] for r in results["responses"]]
-prompts = [r["prompt"] for r in results["responses"]]
+latencies = [r["latency"] for r in results["experiments"]]
+tokens = [r["tokens"] for r in results["experiments"]]
+prompts = [r["prompt"] for r in results["experiments"]]
 
 # Plot latency per prompt
 plt.figure(figsize=(8, 4))
