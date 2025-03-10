@@ -46,7 +46,7 @@ plt.bar(prompts, tokens, color="green")
 plt.xlabel("Prompts")
 plt.ylabel("Tokens Used")
 plt.xticks(rotation=45, ha="right", fontsize=8)
-plt.title("GPT-3.5 Token Usage per Prompt")
+plt.title("GPT-4o Token Usage per Prompt")
 plt.tight_layout()
 plt.show()
 
