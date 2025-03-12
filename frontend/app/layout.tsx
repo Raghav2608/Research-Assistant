@@ -13,9 +13,9 @@ export default function RootLayout({
         <title>My Research Assistant</title>
       </head>
       <body className="flex flex-col min-h-screen">
-        <header className="flex flex-row items-center justify-center w-full bg-dark h-14 p-8">
+        <header className="flex flex-row items-center justify-center w-full bg-dark h-14">
           <h1>
-            <span className="text-center text-white font-extrabold text-3xl">RESEARCH ASSISTANT</span>
+            <span className="text-center text-primary font-extrabold text-3xl">RESEARCH ASSISTANT</span>
           </h1>
         </header>
         <main className="flex flex-row flex-1 w-full bg-light">{children}</main>

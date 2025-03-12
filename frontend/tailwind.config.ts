@@ -9,6 +9,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        lightest: '#697688', 
+        lighter: '#525f6e',  
         light: '#3a4755',
         dark: '#000100',
         primary: '#c0a2b5',
@@ -17,7 +19,7 @@ export default {
         success: '#40b581',
         warning: '#dcd439',
         danger: '#e74420',
-      },
+      }
     },
   },
   plugins: [],
