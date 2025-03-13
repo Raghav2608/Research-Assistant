@@ -1,5 +1,3 @@
-import { Type } from "lucide-react";
-
 export enum Sender{
     User="user",
     Bot="bot",

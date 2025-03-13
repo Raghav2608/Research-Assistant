@@ -6,6 +6,7 @@ export interface SendButtonProps {
   setChatInput: Dispatch<SetStateAction<string>>;
   send: () => void;
 }
+
 export default function SendButton({
   chatInput,
   setChatInput,

@@ -2,8 +2,13 @@
 
 import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
 import SendButton from "./SendButton";
+import Message from "@/types/Message"
 
-export default function Chatbox() {
+export interface ChatboxProps {
+  addMessage: (msg: Message) => void;
+}
+
+export default function Chatbox({ addMessage }: ChatboxProps) {
   const [chatInput, setChatInput] = useState<string>("");
 
   function send(): void {
