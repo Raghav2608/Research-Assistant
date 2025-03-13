@@ -1,27 +1,27 @@
 import os
+import uvicorn
+
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import uvicorn
+from RAG_mqr import answer_with_rag # Import RAG pipeline function
 
 load_dotenv()
 
 if "OPENAI_API_KEY" not in os.environ:
     raise EnvironmentError("openai key not set in environment.")
 
-# Imports RAG pipeline function 
-from RAG_mqr import answer_with_rag
-
 app = FastAPI(
     title="Research Assistant API"
 )
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
-# request validation
+# Request validation
 class Message(BaseModel):
     message: str
 
-# dependency injection to provide the answer_with_rag function.
+# Dependency injection to provide the answer_with_rag function.
 def get_answer_with_rag():
     return answer_with_rag
 
@@ -38,8 +38,6 @@ async def ask(query_request: Message, rag_func=Depends(get_answer_with_rag)):
 @app.get("/health", summary="Health check", description="Returns the API health status.")
 async def health():
     return {"status": "ok"}
-
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
