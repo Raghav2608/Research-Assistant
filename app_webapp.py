@@ -1,14 +1,14 @@
 import os
 import uvicorn
 import requests
+import logging
 
 from fastapi import FastAPI, HTTPException
 from src.backend.pydantic_models import ResearchPaperQuery
 from src.constants import ENDPOINT_URLS
 
-app = FastAPI(
-            title="Research Assistant API"
-            )
+app = FastAPI(title="Research Assistant API")
+logger = logging.getLogger('uvicorn.error')
 
 # Root endpoint just to check if the API is running.
 @app.get(ENDPOINT_URLS['web_app']['path'], summary="Root", description="Root endpoint.")
@@ -21,13 +21,13 @@ async def query_system(query_request:ResearchPaperQuery):
     try:
         
         # Call the data ingestion system
-
+        logger.info("Calling data ingestion system")
         DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
         requests.post(url=DATA_INGESTION_URL, json={"message": query_request.message})
 
-        answer = "Successfully called the system"
+        logger.info(f"Successfully called the system.")
         # answer = answer_with_rag.invoke(query_request.message)
-        return {"answer": answer}
+        return {"answer": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
