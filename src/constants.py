@@ -11,5 +11,10 @@ ENDPOINT_URLS = {
         "base_url": "localhost:8001",
         "app_name": "app_data_ingestion",
         "path": "/data_ingestion",
+    },
+    "rag": {
+        "base_url": "localhost:8002",
+        "app_name": "app_rag",
+        "path": "/rag_pipeline",
     }
 }

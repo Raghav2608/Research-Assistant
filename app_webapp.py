@@ -20,10 +20,14 @@ async def root():
 async def query_system(query_request:ResearchPaperQuery):
     try:
         
-        # Call the data ingestion system
-        logger.info("Calling data ingestion system")
+        logger.info("Calling data ingestion endpoint")
         DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
         requests.post(url=DATA_INGESTION_URL, json={"message": query_request.message})
+        
+    
+        logger.info("Calling RAG endpoint")
+        RAG_URL = f"http://{ENDPOINT_URLS['rag']['base_url']}{ENDPOINT_URLS['rag']['path']}"
+        requests.post(url=RAG_URL, json={"message": query_request.message})
 
         logger.info(f"Successfully called the system.")
         # answer = answer_with_rag.invoke(query_request.message)
