@@ -22,7 +22,7 @@ export default function Chatbox() {
   }
 
   return (
-    <div className="w-full flex flex-row justify-center gap-0">
+    <div className="sticky bottom-10 pb-2 bg-light w-full flex flex-row justify-center gap-0">
       <input
         placeholder="Type your query here..."
         type="text"
