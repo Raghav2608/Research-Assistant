@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
 import SendButton from "./SendButton";
-import Message from "@/types/Message"
+import Message, { Sender } from "@/types/Message";
 
 export interface ChatboxProps {
   addMessage: (msg: Message) => void;
@@ -14,9 +14,11 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
   function send(): void {
     // Check if the input is empty
     if (chatInput == "") return;
-
-    console.log(chatInput);
+    
+    addMessage({ message: chatInput, sender: Sender.User });
+    addMessage({ message: chatInput, sender: Sender.Bot });
     setChatInput("");
+    
   }
 
   function handleEnter(e: KeyboardEvent<HTMLInputElement>) {
