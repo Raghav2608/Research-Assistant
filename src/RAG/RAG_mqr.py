@@ -47,7 +47,7 @@ class RAG():
                 search_kwargs={"k": 4, "fetch_k": 4}
             )
 
-        self.summary_memory = ConversationSummaryMemory(
+        summary_memory = ConversationSummaryMemory(
             llm=self.llm,
             memory_key="summary_history",
             input_key="question",    # The name of the user input in chain
@@ -55,7 +55,7 @@ class RAG():
         )
 
         # Keep the last N exchanges in full
-        self.window_memory = ConversationBufferWindowMemory(
+        window_memory = ConversationBufferWindowMemory(
             k=3,                     # number of most recent exchanges to keep 
             memory_key="window_history",
             input_key="question",
@@ -64,7 +64,7 @@ class RAG():
 
         # Combined memory 
         self.combined_memory = CombinedMemory(
-            memories=[self.summary_memory, self.window_memory]
+            memories=[summary_memory,window_memory]
         )
 
         answer_prompt_template = """
