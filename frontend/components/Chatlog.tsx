@@ -1,5 +1,6 @@
 "use client";
-import Message from "@/types/Message";
+import Message, { Sender } from "@/types/Message";
+import MessageBubble from "./MessageBubble";
 
 export interface ChatlogProps {
   messages: Message[];
@@ -7,6 +8,6 @@ export interface ChatlogProps {
 
 export default function Chatlog({ messages }: ChatlogProps) {
   return (
-    <div className="w-3/5 flex flex-col-reverse h-full my-10 overflow-y-auto"></div>
+    <div className="w-3/5 flex flex-col h-full mt-32 overflow-y-auto"></div>
   );
 }

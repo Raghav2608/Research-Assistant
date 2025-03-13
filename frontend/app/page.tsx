@@ -1,3 +1,5 @@
+"use client";
+
 import Chatbox from "@/components/Chatbox";
 import Chatlog from "@/components/Chatlog";
 import { useState } from "react";
