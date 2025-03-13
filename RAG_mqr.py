@@ -148,7 +148,6 @@ def clean_search_query(search_query: str) -> str:
     # Instead of just replacing spaces with '+', let's do a robust encoding
     return urllib.parse.quote_plus(search_query)
 
-
 # Retrieval Function
 @tool()
 def retrieve(user_query: str):
@@ -201,32 +200,11 @@ def retrieve(user_query: str):
         )
     else:
         hybrid_retriever = vector_retriever
-
-    multi_query_prompt = PromptTemplate(
-            template="""
-        You are an AI search agent that creates multiple queries for the user question.
-        User question: {question}
-        Generate 1 search query that might retrieve relevant documents.
-        """,
-        input_variables=["question"]
-    )
-
-    multi_query_chain = LLMChain(
-        llm=llm,
-        prompt=multi_query_prompt
-    )
-
-    # Initialize MultiQueryRetriever
-    multi_query_hybrid_retriever = MultiQueryRetriever(
-        retriever=hybrid_retriever,
-        llm_chain=multi_query_chain,
-        #num_queries=3
-    )
-
+    
     retrieved_docs = []
     for query in generated_queries:
         retrieved_docs.extend(
-            multi_query_hybrid_retriever.get_relevant_documents(query)
+            hybrid_retriever.get_relevant_documents(query)
         )
 
     if not retrieved_docs:
@@ -236,7 +214,7 @@ def retrieve(user_query: str):
         }
 
     serialized = "\n\n".join(
-        f"Source: {doc.metadata}\nContent: {doc.page_content}"
+        f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
         for doc in retrieved_docs
     )
 
@@ -256,7 +234,7 @@ The user has asked the following question:
 {question}
 
 Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
-Use the format [Source: metadata.title or metadata.link].
+Use the format [Source: link] (link will be given to you with every paper right after word source).
 """
 
 
@@ -293,7 +271,7 @@ def answer_with_rag(user_query: str):
         return serialized  # Likely "No relevant documents found."
 
     # Limit the number of docs if you have many
-    top_docs = docs[:2]  # take top 5 if needed
+    top_docs = docs[:10]  # take top 5 if needed
 
     # Combine text into a single context string
     context_text = "\n\n".join(doc.page_content for doc in top_docs)
@@ -315,5 +293,6 @@ if __name__ == "__main__":
         final_answer = answer_with_rag(user_input)
         print("=== Final Answer ===")
         print("Researcher: ",final_answer)
+
 
 
