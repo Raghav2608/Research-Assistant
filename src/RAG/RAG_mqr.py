@@ -31,28 +31,31 @@ class RAG():
             )
 
         summary_memory = ConversationSummaryMemory(
-            llm=self.llm,
-            memory_key="summary_history",
-            input_key="question",    # The name of the user input in chain
-            output_key="text"      # The name of the chain's output
-        )
+                                                llm=self.llm,
+                                                memory_key="summary_history",
+                                                input_key="question", # The name of the user input in chain
+                                                output_key="text" # The name of the chain's output
+                                                )
 
         # Keep the last N exchanges in full
         window_memory = ConversationBufferWindowMemory(
-            k=3,                     # number of most recent exchanges to keep 
-            memory_key="window_history",
-            input_key="question",
-            output_key="text"
-        )
+                                                        k=3, # Number of most recent exchanges to keep 
+                                                        memory_key="window_history",
+                                                        input_key="question",
+                                                        output_key="text"
+                                                        )
 
         # Combined memory 
         self.combined_memory = CombinedMemory(
-            memories=[summary_memory,window_memory]
-        )
+                                            memories=[
+                                                    summary_memory,
+                                                    window_memory
+                                                    ]
+                                            )
 
         answer_prompt_template = """
         You are a helpful research assistant. 
-        Below are relevant excerpts from academic papers:
+        Below are relevant excepts from academic papers:
 
         {context}
 
@@ -64,9 +67,9 @@ class RAG():
         """
 
         answer_prompt = PromptTemplate(
-        template=answer_prompt_template,
-        input_variables=["context", "question"]
-        )
+                                    template=answer_prompt_template,
+                                    input_variables=["context", "question"]
+                                    )
 
         # LLMChain for the final QA step
         self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
@@ -103,7 +106,6 @@ class RAG():
 
         return query_variations
 
-
     # Function to fetch and process documents
     def search_and_document(self,search_query: str, limit=5):
         start = 0
@@ -128,8 +130,7 @@ class RAG():
             docs.append(doc)
 
         return docs
-
-
+    
     # Splits and add document to ChromaDB
     def split_and_add_documents(self,docs:list[Document]):
         # existing_docs = vector_store.similarity_search("test query", k=1)
@@ -140,8 +141,6 @@ class RAG():
         
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
-
-   
 
     def clean_search_query(self,search_query: str) -> str:
         """Encode the query so it doesn't contain invalid URL chars."""
@@ -157,22 +156,22 @@ class RAG():
         if isinstance(generated_queries, str) and "ERROR" in generated_queries:
             # Return a dict with 'content' and 'artifact' keys
             return {
-                "content": generated_queries,
-                "artifact": []
-            }
+                    "content": generated_queries,
+                    "artifact": []
+                    }
         elif isinstance(generated_queries, list):
             # If the entire list is just a single error
             if len(generated_queries) == 1 and "ERROR" in generated_queries[0]:
                 return {
-                    "content": generated_queries[0],
-                    "artifact": []
-                }
+                        "content": generated_queries[0],
+                        "artifact": []
+                        }
         else:
             # If we got something weird (not a list, not a string)
             return {
-                "content": "ERROR: Invalid query generation output.",
-                "artifact": []
-            }
+                    "content": "ERROR: Invalid query generation output.",
+                    "artifact": []
+                    }
 
         docs = []
         print(generated_queries)
@@ -185,9 +184,9 @@ class RAG():
 
         if not docs:
             return {
-                "content": "No relevant documents found.",
-                "artifact": []
-            }
+                    "content": "No relevant documents found.",
+                    "artifact": []
+                    }
 
         self.split_and_add_documents(docs)
         keyword_retriever = BM25Retriever.from_documents(docs) if docs else None
@@ -195,40 +194,38 @@ class RAG():
         # Combine into Hybrid Retriever
         if keyword_retriever:
             hybrid_retriever = EnsembleRetriever(
-                retrievers=[self.vector_retriever, keyword_retriever],
-                weights=[0.5, 0.5]
-            )
+                                                retrievers=[
+                                                            self.vector_retriever, 
+                                                            keyword_retriever
+                                                            ],
+                                                weights=[0.5, 0.5]
+                                                )
         else:
             hybrid_retriever = self.vector_retriever
         
         retrieved_docs = []
         for query in generated_queries:
-            retrieved_docs.extend(
-                hybrid_retriever.get_relevant_documents(query)
-            )
+            relevant_documents = hybrid_retriever.get_relevant_documents(query)
+            retrieved_docs.extend(relevant_documents)
 
         if not retrieved_docs:
             return {
-                "content": "No relevant documents found.",
-                "artifact": []
-            }
+                    "content": "No relevant documents found.",
+                    "artifact": []
+                    }
 
         serialized = "\n\n".join(
-            f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
-            for doc in retrieved_docs
-        )
+                                f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
+                                for doc in retrieved_docs
+                                )
 
         return {
-            "content": serialized,
-            "artifact": retrieved_docs
-        }
-
+                "content": serialized,
+                "artifact": retrieved_docs
+                }
 
     def ask_with_context(self,context, question):
-        return {
-        "context": context,
-        "question": question
-        }
+        return {"context": context, "question": question}
 
     # retrieval + final answer generation
     def answer_with_rag(self,user_query:str):
