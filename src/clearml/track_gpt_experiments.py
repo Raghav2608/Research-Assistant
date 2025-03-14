@@ -39,9 +39,38 @@ prompts = [
 ]
 
 ground_truths = [
-    "Recent research in computer vision focuses on...",
-    "Transformer models have revolutionized AI by...",
-    "Key challenges in NLP include...",
+    "Recent advancements in computer vision encompass several key areas:
+
+Vision Transformers (ViTs): Building upon the transformer architecture, ViTs have been applied to image recognition tasks, offering an alternative to convolutional neural networks (CNNs). They process images by dividing them into patches and have shown promising results in various applications, including image classification and segmentation. ​
+en.wikipedia.org
++1
+en.wikipedia.org
++1
+
+MobileNetV4: This iteration of the MobileNet series focuses on efficient neural network architectures for mobile and edge devices. MobileNetV4 introduces the "universal inverted bottleneck" and attention modules with multi-query attention, enhancing performance while maintaining computational efficiency. ​
+en.wikipedia.org
+
+Physics-Inspired Computer Vision (PhyCV): PhyCV leverages algorithms derived from physical phenomena to perform tasks such as edge detection and image enhancement. By emulating light propagation through diffractive media, PhyCV offers efficient and interpretable solutions for various vision tasks. ​
+en.wikipedia.org
+
+AI-Enhanced Night Vision: Companies like Deepnight are integrating AI with low-light cameras to develop affordable night vision goggles. This technology enhances low-light imagery using AI image processing, significantly reducing costs and expanding applications beyond the military. ",
+    "Transformer models have revolutionized artificial intelligence by introducing a mechanism that allows models to process data non-sequentially, capturing contextual relationships more effectively. Their significance includes:​
+
+Parallel Processing: Unlike traditional recurrent neural networks (RNNs), transformers can process input data in parallel, leading to faster training times and the ability to handle larger datasets. ​
+en.wikipedia.org
+
+Scalability: Transformers have been scaled to create large language models like GPT-4, demonstrating capabilities in generating human-like text, translation, and summarization. Their architecture supports the development of models with billions of parameters, enhancing performance across various tasks. ​
+businessinsider.com
+
+Cross-Domain Applications: Beyond natural language processing, transformers have been adapted for computer vision (e.g., Vision Transformers) and other fields, showcasing their versatility and effectiveness in modeling complex data structures.",
+    "Despite significant advancements, NLP faces several ongoing challenges:
+
+Understanding and Context: Current models, while proficient at generating text, often lack true comprehension and may produce plausible-sounding but incorrect or nonsensical answers. This limitation highlights the gap between pattern recognition and genuine understanding. ​
+
+Bias and Fairness: NLP models trained on large datasets can inadvertently learn and propagate biases present in the data, leading to unfair or discriminatory outcomes. Addressing this requires developing methods to detect and mitigate biases in AI systems. ​
+lemonde.fr
+
+Data Quality and Scarcity: High-quality, diverse datasets are essential for training robust NLP models. However, obtaining such data can be challenging, especially for low-resource languages or specialized domains, limiting the models' applicability and performance in these areas. ",
 ]
 
 results = {"experiments": []}
