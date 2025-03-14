@@ -7,7 +7,7 @@ from bert_score import score  # For semantic similarity evaluation
 
 
 task = Task.init(
-    project_name="GAP Generative Model",
+    project_name="Large Group Project",
     task_name="GPT-4o-mini Automatic Parameter Sweep",
     output_uri=True  # Enable storing artifacts and logs in ClearML
 )
@@ -122,8 +122,10 @@ for temp in temperature_values:
             experiment_iteration += 1
 
 # Save results to JSON file
-results_dir = task.get_logger().get_log_directory()
-json_path = os.path.join(results_dir, "experiment_results.json")
+#results_dir = task.get_logger().get_log_directory()
+#json_path = os.path.join(results_dir, "experiment_results.json")
+json_path = os.path.join(os.getcwd(), "experiment_results.json")
+
 with open(json_path, "w") as f:
     json.dump(results, f, indent=4)
 
