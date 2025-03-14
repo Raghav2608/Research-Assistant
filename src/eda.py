@@ -69,9 +69,9 @@ def run_eda(entries):
 
 if __name__ == "__main__":
     # Parameters for fetching papers
-    search_query = "all:transformer"  # Example query
+    search_query = "all:transformer"  
     start = 0
-    max_results = 10  # 10 papers for analysis
+    max_results = 10  
 
     # fetch and parse papers
     xml_papers = fetch_arxiv_papers(search_query, start, max_results)
