@@ -105,8 +105,7 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
             "summary": entry["summary"].strip(),
             "authors": [author["name"] for author in entry["author"]],
             "published": entry["published"],
-            "pdf_link": pdf_link or "No PDF available",
-            "content": content
+            "pdf_link": pdf_link if pdf_link else "No PDF available"
         }
         entries.append(paper_data)
 

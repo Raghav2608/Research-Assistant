@@ -2,4 +2,5 @@
 lgap
 __pycache__
 .env
-chroma_db
+chroma_db/
+chroma_db/chroma.sqlite3
