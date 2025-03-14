@@ -1,2 +1,5 @@
 .venv
+lgap
 __pycache__
+.env
+chroma_db
