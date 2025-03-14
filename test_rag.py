@@ -11,12 +11,13 @@ if __name__ == "__main__":
     # To see the query generated
     logging.basicConfig()
     logging.getLogger('langchain.retrievers.multi_query').setLevel(logging.INFO)
-    load_dotenv()
-    os.environ['USER_AGENT'] = 'myagent'
-    if not os.environ.get("OPENAI_API_KEY"):
-        os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter API key for OpenAI: ")
 
-    rag = RAG()
+    load_dotenv()
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    if not OPENAI_API_KEY:
+        raise EnvironmentError("openai key not set in environment.")
+
+    rag = RAG(openai_api_key=OPENAI_API_KEY)
     while True:
         user_input = input("User: ")
         if user_input.lower() in ["exit", "quit", "end"]:

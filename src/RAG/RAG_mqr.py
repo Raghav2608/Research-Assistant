@@ -1,10 +1,7 @@
-import getpass
 import os
-import logging
 import json
 import urllib
 
-from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
@@ -15,19 +12,12 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
 
-# To see the query generated
-logging.basicConfig()
-logging.getLogger('langchain.retrievers.multi_query').setLevel(logging.INFO)
-load_dotenv()
-os.environ['USER_AGENT'] = 'myagent'
-if not os.environ.get("OPENAI_API_KEY"):
-  os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter API key for OpenAI: ")
-
-
 class RAG():
-    def __init__(self):
-        self.llm = ChatOpenAI(model="gpt-4o-mini")
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    def __init__(self, openai_api_key):
+        os.environ["USER_AGENT"] = "myagent" # Always set a user agent
+        self.llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
+
         self.PERSIST_DIR = "chroma_db"
         if not os.path.exists(self.PERSIST_DIR):
             os.makedirs(self.PERSIST_DIR)
@@ -270,17 +260,3 @@ class RAG():
 
         answer = self.qa_chain.run(self.ask_with_context(context_text, user_query))
         return answer
-
-
-if __name__ == "__main__":
-    rag = RAG()
-    while True:
-        user_input = input("User: ")
-        if user_input.lower() in ["exit", "quit", "end"]:
-            break
-        final_answer = rag.answer_with_rag(user_input)
-        print("=== Final Answer ===")
-        print("Researcher: ",final_answer)
-
-
-
