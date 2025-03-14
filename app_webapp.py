@@ -22,7 +22,7 @@ async def query_system(query_request:ResearchPaperQuery):
         
         logger.info("Calling data ingestion endpoint")
         DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
-        requests.post(url=DATA_INGESTION_URL, json={"message": query_request.message})
+        all_entries = requests.post(url=DATA_INGESTION_URL, json={"message": query_request.message})
         
     
         logger.info("Calling RAG endpoint")
