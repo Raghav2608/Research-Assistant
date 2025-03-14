@@ -2,6 +2,8 @@ import os
 import json
 import urllib
 
+from typing import Dict
+
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
@@ -12,8 +14,8 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
 
-class RAG():
-    def __init__(self, openai_api_key):
+class RAG:
+    def __init__(self, openai_api_key:str):
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
         self.llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
@@ -223,9 +225,9 @@ class RAG():
                 "content": serialized,
                 "artifact": retrieved_docs
                 }
-
-    def ask_with_context(self,context, question):
-        return {"context": context, "question": question}
+    
+    def combine_context_and_question(self, context_text:str, user_query:str) -> Dict[str, str]:
+        return {"context": context_text, "question": user_query}
 
     # retrieval + final answer generation
     def answer_with_rag(self,user_query:str):
@@ -255,5 +257,6 @@ class RAG():
         print(context_text)
         print("=== END CONTEXT ===")
 
-        answer = self.qa_chain.run(self.ask_with_context(context_text, user_query))
+        combined_query = self.combine_context_and_question(context_text, user_query)
+        answer = self.qa_chain.run(combined_query)
         return answer
