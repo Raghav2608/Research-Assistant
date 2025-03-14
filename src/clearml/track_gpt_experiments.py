@@ -5,10 +5,9 @@ from clearml import Task, Logger
 from openai import OpenAI
 from bert_score import score  # For semantic similarity evaluation
 
-
 task = Task.init(
-    project_name="Large Group Project",
-    task_name="GPT-4o-mini Automatic Parameter Sweep",
+    project_name="GAP Generative Model",
+    task_name="GPT-4o-mini Hyperparameter Sweep",
     output_uri=True  # Enable storing artifacts and logs in ClearML
 )
 
@@ -18,52 +17,45 @@ if not api_key:
 
 client = OpenAI()
 
+# Base parameters
 base_params = {
-    "model": "gpt-4",  # Replace with your actual model name
-    "temperature": 0.7,  # Default; will be overwritten in the loop
-    "max_tokens": 500,  # Default; will be overwritten in the loop
+    "model": "gpt-4o",  
+    "temperature": 0.7,  
+    "max_tokens": 500,  
     "top_p": 0.9,
     "frequency_penalty": 0.0,
     "presence_penalty": 0.6,
 }
-
-# connects base parameters to ClearML for tracking
 task.connect(base_params)
 
-# hyperparameters
+# hyperparameter values to sweep
 temperature_values = [0.5, 0.7, 0.9]
 max_tokens_values = [300, 500]
 
-# prompts for evaluation
 prompts = [
     "Summarize the latest research in computer vision.",
     "Explain the significance of transformer models in AI.",
     "What are the key challenges in natural language processing today?"
 ]
 
-# Ground truth responses for evaluation, to be replaced
 ground_truths = [
     "Recent research in computer vision focuses on...",
     "Transformer models have revolutionized AI by...",
     "Key challenges in NLP include...",
 ]
 
-# Container
 results = {"experiments": []}
 
-# Loop over each combination of temperature and max_tokens
+# Loop over each combination of hyperparameters
 experiment_iteration = 1
 for temp in temperature_values:
     for max_tok in max_tokens_values:
-        # Update the parameters for this combination
         base_params["temperature"] = temp
         base_params["max_tokens"] = max_tok
 
         for i, prompt in enumerate(prompts):
-            # Record the start time
             start_time = time.time()
 
-            # Generate response from the model
             response = client.chat.completions.create(
                 model=base_params["model"],
                 messages=[{"role": "user", "content": prompt}],
@@ -73,22 +65,20 @@ for temp in temperature_values:
                 frequency_penalty=base_params["frequency_penalty"],
                 presence_penalty=base_params["presence_penalty"]
             )
-
-         
+            
             latency = time.time() - start_time
 
-     
+            # model output and token usage
             gpt_output = response.choices[0].message.content
             total_tokens = response.usage.total_tokens
 
-            # Evaluate using BERTScore
-            if i < len(ground_truths): 
+            # Evaluate with BERTScore
+            if i < len(ground_truths):  
                 P, R, F1 = score([gpt_output], [ground_truths[i]], lang="en", model_type="bert-base-uncased")
                 bertscore_f1 = F1.mean().item()  # F1 score for evaluation
             else:
-                bertscore_f1 = None  # No ground truth 
+                bertscore_f1 = None  # No ground truth available for this prompt
 
-            # Log to ClearML
             logger = Logger.current_logger()
             logger.report_text(f"Prompt: {prompt}")
             logger.report_text(f"Response: {gpt_output}")
@@ -97,7 +87,7 @@ for temp in temperature_values:
             if bertscore_f1 is not None:
                 logger.report_scalar("BERTScore F1", "score", bertscore_f1, iteration=experiment_iteration)
 
-            # Append results to container
+            # Append to container
             results["experiments"].append({
                 "iteration": experiment_iteration,
                 "prompt": prompt,
@@ -109,7 +99,7 @@ for temp in temperature_values:
                 "bertscore_f1": bertscore_f1
             })
 
-        
+            # Print results to console
             print(f"Iteration {experiment_iteration}:")
             print(f"  Prompt: {prompt}")
             print(f"  Temperature: {temp}, Max Tokens: {max_tok}")
@@ -121,15 +111,13 @@ for temp in temperature_values:
 
             experiment_iteration += 1
 
-# Save results to JSON file
-#results_dir = task.get_logger().get_log_directory()
-#json_path = os.path.join(results_dir, "experiment_results.json")
-json_path = os.path.join(os.getcwd(), "experiment_results.json")
-
+# Save to JSON file
+results_dir = task.get_logger().get_log_directory()
+json_path = os.path.join(results_dir, "experiment_results.json")
 with open(json_path, "w") as f:
     json.dump(results, f, indent=4)
 
-# Upload artifact
+#artifact for ClearML
 task.upload_artifact("GPT-4 Responses", artifact_object=json_path)
 
 
