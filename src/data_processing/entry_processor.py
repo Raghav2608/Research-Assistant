@@ -8,6 +8,28 @@ class EntryProcessor:
     - Ensures that the entries contain all the required keys and that the values have the correct types.
     - Processes the text content of the entries.
     - Summarises the information about each paper (entry) as a string.
+
+    Entries are expected to be in the following format:
+    {
+        "id": str,
+        "title": str,
+        "summary": str,
+        "authors": List[str],
+        "published": str,
+        "pdf_link": str,
+        "content": str
+    }
+
+    For example:
+    {
+        "id": "1234.56789",
+        "title": "A Sample Paper Title",
+        "summary": "This paper presents a new method for...",
+        "authors": ["Alice", "Bob"],
+        "published": "2021-01-01",
+        "pdf_link": "https://arxiv.org/pdf/1234.56789.pdf",
+        "content": "This paper presents a new method for..."
+    }
     """
     def __init__(self):
         self.text_preprocessor = TextPreprocessor()
@@ -60,11 +82,14 @@ class EntryProcessor:
         paper_string += f"Content: {entry['content']}\n"
         return paper_string
     
-    def __call__(self, entry:Dict[str, Any]) -> str:
+    def __call__(self, entry:Dict[str, Any]) -> Dict[str, Any]:
         """
         Processes the text content of an entry.
+
+        Args:
+            entry (Dict[str, Any]): The paper entry to process.
         """
         self.validate_entry(entry)
         entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
-        return self.summarise_entry(entry)
+        return entry
