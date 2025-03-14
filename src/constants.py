@@ -16,5 +16,10 @@ ENDPOINT_URLS = {
         "base_url": "localhost:8002",
         "app_name": "app_rag",
         "path": "/rag_pipeline",
+    },
+    "llm_inference": {
+        "base_url": "localhost:8003",
+        "app_name": "app_llm_inference",
+        "path": "/llm_inference",
     }
 }

@@ -29,8 +29,14 @@ async def query_system(query_request:ResearchPaperQuery):
         RAG_URL = f"http://{ENDPOINT_URLS['rag']['base_url']}{ENDPOINT_URLS['rag']['path']}"
         requests.post(url=RAG_URL, json={"message": query_request.message})
 
+        logger.info("Calling LLM inference endpoint")
+        LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
+        requests.post(url=LLM_INFERENCE_URL, json={"prompt": query_request.message})
+
         logger.info(f"Successfully called the system.")
         # answer = answer_with_rag.invoke(query_request.message)
+
+
         return {"answer": None}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
