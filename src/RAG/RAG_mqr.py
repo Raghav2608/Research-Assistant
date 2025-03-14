@@ -30,9 +30,9 @@ class RAG:
         
         # Initialize Vector Store Retriever
         self.vector_retriever = self.vector_store.as_retriever(
-                search_type="mmr",
-                search_kwargs={"k": 4, "fetch_k": 4}
-            )
+                                                            search_type="mmr",
+                                                            search_kwargs={"k": 4, "fetch_k": 4}
+                                                            )
 
         summary_memory = ConversationSummaryMemory(
                                                 llm=self.llm,
@@ -57,6 +57,9 @@ class RAG:
                                                     ]
                                             )
 
+
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        
         answer_prompt_template = """
         You are a helpful research assistant. 
         Below are relevant excepts from academic papers:
@@ -74,7 +77,6 @@ class RAG:
                                     template=answer_prompt_template,
                                     input_variables=["context", "question"]
                                     )
-
         # LLMChain for the final QA step
         self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
     
@@ -91,20 +93,10 @@ class RAG:
                         )
             docs.append(doc)
         return docs
-
-    # Function to fetch and process documents
-    def search_and_document(self, search_query:str, max_results=2) -> List[Document]:
-        start = 0
-        xml_papers = fetch_arxiv_papers(search_query, start, max_results)
-        entries = parse_papers(xml_papers)
-        docs = self.convert_entries_to_docs(entries)
-        return docs
     
     # Splits and add document to ChromaDB
     def split_and_add_documents(self,docs:list[Document]):
-
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-        all_splits = text_splitter.split_documents(docs)
+        all_splits = self.text_splitter.split_documents(docs)
         
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
