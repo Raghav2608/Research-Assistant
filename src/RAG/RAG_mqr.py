@@ -1,26 +1,19 @@
-
-from langchain import hub
-from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-#from langgraph.graph import START, StateGraph, MessagesState
-from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
-from langchain_community.vectorstores import Chroma
-#from langchain_chroma import Chroma
 import getpass
 import os
-import shutil
-from dotenv import load_dotenv
-from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_core.messages import SystemMessage
-#from langgraph.prebuilt import ToolNode
-from langchain.retrievers import EnsembleRetriever, BM25Retriever, MultiQueryRetriever
 import logging
+import json
+import urllib
+
+from dotenv import load_dotenv
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
+from langchain_community.vectorstores import Chroma
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.retrievers import EnsembleRetriever, BM25Retriever
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
-import json
-import urllib
 
 # To see the query generated
 logging.basicConfig()
@@ -124,7 +117,7 @@ class RAG():
     # Function to fetch and process documents
     def search_and_document(self,search_query: str, limit=5):
         start = 0
-        max_results = 100 # or bigger if you want
+        max_results = 2 # or bigger if you want
         xml_papers = fetch_arxiv_papers(search_query, start, max_results)
         entries = parse_papers(xml_papers)
 
@@ -192,10 +185,12 @@ class RAG():
             }
 
         docs = []
+        print(generated_queries)
         for query in generated_queries:
             # clean_search_query sanitizes or modifies the docs 
             # so they can be safely used in the next steps
             safe_query = self.clean_search_query(query)
+            print(safe_query)
             docs.extend(self.search_and_document(safe_query))
 
         if not docs:
