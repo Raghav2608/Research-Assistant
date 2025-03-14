@@ -1,4 +1,6 @@
 import json
+import urllib.parse
+
 from langchain_openai import ChatOpenAI
 
 class ResearchQueryGenerator:
@@ -35,6 +37,29 @@ class ResearchQueryGenerator:
 
         try:
             query_variations = json.loads(generated_query)
+            # query_variations = [self.clean_search_query(query) for query in query_variations]
+
+            print("Q", query_variations)
+
+            if isinstance(query_variations, str) and "ERROR" in query_variations:
+            # Return a dict with 'content' and 'artifact' keys
+                return query_variations
+            
+            elif isinstance(query_variations, list):
+                # If the entire list is just a single error
+                if len(query_variations) == 1 and "ERROR" in query_variations[0]:
+                    return query_variations[0]
+                else:
+                    return query_variations
+            else:
+                # If we got something weird (not a list, not a string)
+                raise ValueError("ERROR: Invalid query generation output.")
         except json.JSONDecodeError:
             return ["ERROR: Failed to generate valid queries. Please try again."]
-        return query_variations
+        except ValueError:
+            return ["ERROR: Failed to generate valid queries. Please try again."]
+        
+    def clean_search_query(self,search_query: str) -> str:
+        """Encode the query so it doesn't contain invalid URL chars."""
+        # Instead of just replacing spaces with '+', let's do a robust encoding
+        return urllib.parse.quote_plus(search_query)

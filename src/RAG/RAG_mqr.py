@@ -13,13 +13,10 @@ from langchain.memory import ConversationBufferWindowMemory, ConversationSummary
 from langchain_community.retrievers import BM25Retriever
 from langchain_chroma import Chroma
 
-from src.RAG.query_generator import ResearchQueryGenerator
-
 class RAG:
     def __init__(self, openai_api_key:str):
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
         self.llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
-        self.query_generator = ResearchQueryGenerator(openai_api_key=openai_api_key)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
         self.PERSIST_DIR = "chroma_db"
@@ -101,13 +98,8 @@ class RAG:
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
 
-    def clean_search_query(self,search_query: str) -> str:
-        """Encode the query so it doesn't contain invalid URL chars."""
-        # Instead of just replacing spaces with '+', let's do a robust encoding
-        return urllib.parse.quote_plus(search_query)
-
     # Retrieval Function
-    def retrieve(self,user_query: str):
+    def retrieve(self, entries):
         """Retrieve information related to a query."""
         generated_queries = self.query_generator.generate(user_query)
 

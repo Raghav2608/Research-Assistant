@@ -20,24 +20,30 @@ class DataProcessingPipeline:
         """
         time_takens = []
         for i, entry in enumerate(entries):
-            start_time = time.perf_counter()
-            print(f"Paper: {i+1}")
-            paper_content = entry["content"]
-            print(paper_content)
-            print("Number of characters (before processing):", len(paper_content))
+            try:
+                start_time = time.perf_counter()
+                print(f"Paper: {i+1}")
+                paper_content = entry["content"]
+                print(paper_content)
+                print("Number of characters (before processing):", len(paper_content))
 
-            # Process the entry (in-place)
-            entries[i] = self.entry_processor(entry)
+                # Process the entry (in-place)
+                entries[i] = self.entry_processor(entry)
 
-            processed_content = entry["content"]
-            print(processed_content)
-            print("Number of characters (after processing):", len(processed_content))
-            print("\n")
-            end_time = time.perf_counter()
-            time_takens.append(end_time-start_time)
+                processed_content = entry["content"]
+                print(processed_content)
+                print("Number of characters (after processing):", len(processed_content))
+                print("\n")
+                end_time = time.perf_counter()
+                time_takens.append(end_time-start_time)
+            except Exception as e:
+                print(f"Error processing paper {i+1}: {e}")
+                time_takens.append(0)
         
         for i in range(len(entries)):
             print(f"Time taken for paper {i+1}: {time_takens[i]:.2f} seconds")
-        print(f"Average time taken per paper: {sum(time_takens)/len(entries):.2f} seconds")
+    
+        if len(entries) > 1:
+            print(f"Average time taken per paper: {sum(time_takens)/len(entries):.2f} seconds")
         print(f"Total time taken: {sum(time_takens):.2f} seconds")
         return entries
