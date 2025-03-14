@@ -7,12 +7,13 @@ from typing import Dict, List
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
-from langchain_community.vectorstores import Chroma
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.retrievers import EnsembleRetriever, BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain, ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
+from langchain_community.retrievers import BM25Retriever
+from langchain_chroma import Chroma
 
 class RAG:
     def __init__(self, openai_api_key:str):
