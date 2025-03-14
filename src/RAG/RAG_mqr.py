@@ -2,7 +2,7 @@ import os
 import json
 import urllib
 
-from typing import Dict
+from typing import Dict, List
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -107,37 +107,32 @@ class RAG:
             return ["ERROR: Failed to generate valid queries. Please try again."]
 
         return query_variations
+    
+    def convert_entries_to_docs(self, entries:List[Dict[str, str]]) -> List[Document]:
+        docs = []
+        for entry in entries:
+            doc = Document(
+                        page_content=entry["summary"],   # Use entry["summary"] to skip parsing
+                        metadata={
+                                "title": entry["title"],
+                                "published": entry["published"],
+                                "link": entry["pdf_link"],
+                                },
+                        )
+            docs.append(doc)
+        return docs
 
     # Function to fetch and process documents
-    def search_and_document(self,search_query: str, limit=5):
+    def search_and_document(self, search_query:str, max_results=2) -> List[Document]:
         start = 0
-        max_results = 2 # or bigger if you want
         xml_papers = fetch_arxiv_papers(search_query, start, max_results)
         entries = parse_papers(xml_papers)
-
-        # Limit the final doc count
-        docs = []
-        for i, entry in enumerate(entries):
-            if i >= limit:
-                break
-            # convert to Document object or do your existing logic
-            doc = Document(
-                page_content=entry["summary"],   # Use entry["summary"] to skip parsing
-                metadata={
-                    "title": entry["title"],
-                    "published": entry["published"],
-                    "link": entry["pdf_link"],
-                },
-            )
-            docs.append(doc)
-
+        docs = self.convert_entries_to_docs(entries)
         return docs
     
     # Splits and add document to ChromaDB
     def split_and_add_documents(self,docs:list[Document]):
-        # existing_docs = vector_store.similarity_search("test query", k=1)
-        #if not existing_docs:
-        
+
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         all_splits = text_splitter.split_documents(docs)
         

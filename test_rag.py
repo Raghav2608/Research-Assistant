@@ -1,4 +1,3 @@
-import getpass
 import os
 import logging
 
@@ -25,6 +24,3 @@ if __name__ == "__main__":
         final_answer = rag.answer_with_rag(user_input)
         print("=== Final Answer ===")
         print("Researcher: ",final_answer)
-
-
-
