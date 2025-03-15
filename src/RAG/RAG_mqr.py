@@ -57,25 +57,25 @@ class RAG:
 
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         
-        answer_prompt_template = """
-        You are a helpful research assistant. 
-        Below are relevant excepts from academic papers:
+        # answer_prompt_template = """
+        # You are a helpful research assistant. 
+        # Below are relevant excepts from academic papers:
 
-        {context}
+        # {context}
 
-        The user has asked the following question:
-        {question}
+        # The user has asked the following question:
+        # {question}
 
-        Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
-        Use the format [Source: link] (link will be given to you with every paper right after word source).
-        """
+        # Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
+        # Use the format [Source: link] (link will be given to you with every paper right after word source).
+        # """
 
-        answer_prompt = PromptTemplate(
-                                    template=answer_prompt_template,
-                                    input_variables=["context", "question"]
-                                    )
-        # LLMChain for the final QA step
-        self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
+        # answer_prompt = PromptTemplate(
+        #                             template=answer_prompt_template,
+        #                             input_variables=["context", "question"]
+        #                             )
+        # # LLMChain for the final QA step
+        # self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
     
     def convert_entries_to_docs(self, entries:List[Dict[str, str]]) -> List[Document]:
         docs = []
@@ -100,43 +100,6 @@ class RAG:
 
     # Retrieval Function
     def retrieve(self, user_query) -> str:
-        # """Retrieve information related to a query."""
-        # generated_queries = self.query_generator.generate(user_query)
-
-        # if isinstance(generated_queries, str) and "ERROR" in generated_queries:
-        #     # Return a dict with 'content' and 'artifact' keys
-        #     return {
-        #             "content": generated_queries,
-        #             "artifact": []
-        #             }
-        # elif isinstance(generated_queries, list):
-        #     # If the entire list is just a single error
-        #     if len(generated_queries) == 1 and "ERROR" in generated_queries[0]:
-        #         return {
-        #                 "content": generated_queries[0],
-        #                 "artifact": []
-        #                 }
-        # else:
-        #     # If we got something weird (not a list, not a string)
-        #     return {
-        #             "content": "ERROR: Invalid query generation output.",
-        #             "artifact": []
-        #             }
-
-        # docs = []
-        # print(generated_queries)
-        # for query in generated_queries:
-        #     # clean_search_query sanitizes or modifies the docs 
-        #     # so they can be safely used in the next steps
-        #     safe_query = self.clean_search_query(query)
-        #     print(safe_query)
-        #     docs.extend(self.search_and_document(safe_query))
-
-        # if not docs:
-        #     return {
-        #             "content": "No relevant documents found.",
-        #             "artifact": []
-        #             }
 
         # Check if we have any documents first:
         print(user_query)
@@ -148,41 +111,15 @@ class RAG:
             return ""
         
         # >=1 results found
-        docs = []
+        retrieved_docs = []
         for doc, score in results:
             print(type(doc))
             print(doc)
             print(score)
             print("\n")
-            docs.append(doc)
+            retrieved_docs.append(doc)
         
-        self.split_and_add_documents(docs) # Add documents to ChromaDB (save)
-        keyword_retriever = BM25Retriever.from_documents(docs) if docs else None
-
-
-        # Combine into Hybrid Retriever
-        if keyword_retriever:
-            hybrid_retriever = EnsembleRetriever(
-                                                retrievers=[
-                                                            self.vector_retriever, 
-                                                            keyword_retriever
-                                                            ],
-                                                weights=[0.5, 0.5]
-                                                )
-        else:
-            hybrid_retriever = self.vector_retriever
-        
-        retrieved_docs = []
-        for query in generated_queries:
-            relevant_documents = hybrid_retriever.get_relevant_documents(query)
-            retrieved_docs.extend(relevant_documents)
-
-        if not retrieved_docs:
-            return {
-                    "content": "No relevant documents found.",
-                    "artifact": []
-                    }
-
+        # Combine content into single string
         serialized_content = "\n\n".join(
                                 f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
                                 for doc in retrieved_docs
@@ -193,19 +130,19 @@ class RAG:
     def combine_context_and_question(self, context_text:str, user_query:str) -> Dict[str, str]:
         return {"context": context_text, "question": user_query}
 
-    # retrieval + final answer generation
-    def answer_with_rag(self, user_query:str):
-        """
-        1. Use the 'retrieve' function to get relevant documents.
-        2. Stuff those docs into the QA chain as context.
-        3. Return a final answer generated by the LLM.
-        """
-        response_dict = self.retrieve(user_query)
-        # Using the dictionary of content and artifact
-        serialized = response_dict["content"]
-        docs = response_dict["artifact"]
+    # # retrieval + final answer generation
+    # def answer_with_rag(self, user_query:str):
+    #     """
+    #     1. Use the 'retrieve' function to get relevant documents.
+    #     2. Stuff those docs into the QA chain as context.
+    #     3. Return a final answer generated by the LLM.
+    #     """
+    #     response_dict = self.retrieve(user_query)
+    #     # Using the dictionary of content and artifact
+    #     serialized = response_dict["content"]
+    #     docs = response_dict["artifact"]
 
-        # If no docs found, just return the message
-        if not docs:
-            return serialized  # Likely "No relevant documents found."
-        return answer
+    #     # If no docs found, just return the message
+    #     if not docs:
+    #         return serialized  # Likely "No relevant documents found."
+    #     return answer
