@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     data_pipeline = DataPipeline()
     query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY)
-    rag = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
+    retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
     query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
 
     while True:
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         additional_queries.append(user_input)
 
         # Attempt to retrieve documents the existing database
-        responses = rag.retrieve(user_query=user_input)
+        responses = retrieval_engine.retrieve(user_query=user_input)
 
         # Attempt to retrieve documents via data ingestion
         if not responses:
@@ -52,11 +52,11 @@ if __name__ == "__main__":
             if len(all_entries) == 0:
                 print("No entries could be found for this query, please try to rephrase your query.")
             else:
-                docs = rag.convert_entries_to_docs(entries=all_entries)
-                rag.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
+                docs = retrieval_engine.convert_entries_to_docs(entries=all_entries)
+                retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
             # Attempt to retrieve the documents again
-            responses = rag.retrieve(user_query=user_input)
+            responses = retrieval_engine.retrieve(user_query=user_input)
 
         print("Responses:", responses)
 
