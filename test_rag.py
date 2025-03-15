@@ -36,10 +36,10 @@ if __name__ == "__main__":
         additional_queries.append(user_input)
 
         # Attempt to retrieve documents the existing database
-        text_response = rag.retrieve(user_query=user_input)
+        responses = rag.retrieve(user_query=user_input)
 
         # Attempt to retrieve documents via data ingestion
-        if not text_response:
+        if not responses:
             print("No relevant documents found, searching for more documents")
 
             all_entries = []
@@ -55,13 +55,13 @@ if __name__ == "__main__":
                 docs = rag.convert_entries_to_docs(entries=all_entries)
                 rag.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
-                # Attempt to retrieve the documents again
-                second_response = rag.retrieve(user_query=user_input)
+            # Attempt to retrieve the documents again
+            responses = rag.retrieve(user_query=user_input)
 
-                print("Second response:", second_response)
+        print("Responses:", responses)
 
         # Pass to LLM
-        final_answer = query_responder.generate_answer(docs=all_entries, user_query=user_input)
+        final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input)
 
         print("=== Final Answer ===")
-        print("Researcher: ",final_answer)
+        print("Researcher: ", final_answer)
