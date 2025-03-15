@@ -96,5 +96,5 @@ class QueryResponder:
         """
         formatted_content = self.format_documents(retrieved_docs)
         prompt = self.combine_context_and_question(formatted_content, user_query)
-        answer = self.qa_chain.run(prompt)
+        answer = self.qa_chain.invoke(prompt)
         return answer
