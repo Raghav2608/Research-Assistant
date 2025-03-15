@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from src.RAG.RAG_mqr import RAG
 from src.data_pipeline import DataPipeline
 from src.RAG.query_generator import ResearchQueryGenerator
-from src.RAG.LLM import QueryResponder
+from src.RAG.query_responder import QueryResponder
 
 if __name__ == "__main__":
 
