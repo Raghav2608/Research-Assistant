@@ -92,54 +92,73 @@ class RAG:
         return docs
     
     # Splits and add document to ChromaDB
-    def split_and_add_documents(self,docs:list[Document]):
+    def split_and_add_documents(self, docs:list[Document]):
         all_splits = self.text_splitter.split_documents(docs)
         
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
 
     # Retrieval Function
-    def retrieve(self, entries):
-        """Retrieve information related to a query."""
-        generated_queries = self.query_generator.generate(user_query)
+    def retrieve(self, user_query) -> str:
+        # """Retrieve information related to a query."""
+        # generated_queries = self.query_generator.generate(user_query)
 
-        if isinstance(generated_queries, str) and "ERROR" in generated_queries:
-            # Return a dict with 'content' and 'artifact' keys
-            return {
-                    "content": generated_queries,
-                    "artifact": []
-                    }
-        elif isinstance(generated_queries, list):
-            # If the entire list is just a single error
-            if len(generated_queries) == 1 and "ERROR" in generated_queries[0]:
-                return {
-                        "content": generated_queries[0],
-                        "artifact": []
-                        }
-        else:
-            # If we got something weird (not a list, not a string)
-            return {
-                    "content": "ERROR: Invalid query generation output.",
-                    "artifact": []
-                    }
+        # if isinstance(generated_queries, str) and "ERROR" in generated_queries:
+        #     # Return a dict with 'content' and 'artifact' keys
+        #     return {
+        #             "content": generated_queries,
+        #             "artifact": []
+        #             }
+        # elif isinstance(generated_queries, list):
+        #     # If the entire list is just a single error
+        #     if len(generated_queries) == 1 and "ERROR" in generated_queries[0]:
+        #         return {
+        #                 "content": generated_queries[0],
+        #                 "artifact": []
+        #                 }
+        # else:
+        #     # If we got something weird (not a list, not a string)
+        #     return {
+        #             "content": "ERROR: Invalid query generation output.",
+        #             "artifact": []
+        #             }
 
+        # docs = []
+        # print(generated_queries)
+        # for query in generated_queries:
+        #     # clean_search_query sanitizes or modifies the docs 
+        #     # so they can be safely used in the next steps
+        #     safe_query = self.clean_search_query(query)
+        #     print(safe_query)
+        #     docs.extend(self.search_and_document(safe_query))
+
+        # if not docs:
+        #     return {
+        #             "content": "No relevant documents found.",
+        #             "artifact": []
+        #             }
+
+        # Check if we have any documents first:
+        print(user_query)
+        results = self.vector_store.similarity_search_with_score(query=user_query, k=5) # Get top 5 results
+        print("Number of results: ", len(results))
+
+        # No results found
+        if len(results) == 0:
+            return ""
+        
+        # >=1 results found
         docs = []
-        print(generated_queries)
-        for query in generated_queries:
-            # clean_search_query sanitizes or modifies the docs 
-            # so they can be safely used in the next steps
-            safe_query = self.clean_search_query(query)
-            print(safe_query)
-            docs.extend(self.search_and_document(safe_query))
-
-        if not docs:
-            return {
-                    "content": "No relevant documents found.",
-                    "artifact": []
-                    }
-
-        self.split_and_add_documents(docs)
+        for doc, score in results:
+            print(type(doc))
+            print(doc)
+            print(score)
+            print("\n")
+            docs.append(doc)
+        
+        self.split_and_add_documents(docs) # Add documents to ChromaDB (save)
         keyword_retriever = BM25Retriever.from_documents(docs) if docs else None
+
 
         # Combine into Hybrid Retriever
         if keyword_retriever:
@@ -164,21 +183,18 @@ class RAG:
                     "artifact": []
                     }
 
-        serialized = "\n\n".join(
+        serialized_content = "\n\n".join(
                                 f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
                                 for doc in retrieved_docs
                                 )
 
-        return {
-                "content": serialized,
-                "artifact": retrieved_docs
-                }
+        return serialized_content
     
     def combine_context_and_question(self, context_text:str, user_query:str) -> Dict[str, str]:
         return {"context": context_text, "question": user_query}
 
     # retrieval + final answer generation
-    def answer_with_rag(self,user_query:str):
+    def answer_with_rag(self, user_query:str):
         """
         1. Use the 'retrieve' function to get relevant documents.
         2. Stuff those docs into the QA chain as context.
@@ -189,22 +205,7 @@ class RAG:
         serialized = response_dict["content"]
         docs = response_dict["artifact"]
 
-
         # If no docs found, just return the message
         if not docs:
             return serialized  # Likely "No relevant documents found."
-
-        # Limit the number of docs if you have many
-        top_docs = docs[:10]  # take top 5 if needed
-
-        # Combine text into a single context string
-        context_text = "\n\n".join(doc.page_content for doc in top_docs)
-
-        # Run the final LLM chain
-        print("=== CONTEXT TEXT ===")
-        print(context_text)
-        print("=== END CONTEXT ===")
-
-        combined_query = self.combine_context_and_question(context_text, user_query)
-        answer = self.qa_chain.run(combined_query)
         return answer

@@ -42,7 +42,7 @@ if __name__ == "__main__":
         print("Total number of retrieved entries from data ingestion: ", len(all_entries))
 
         # Pass to LLM (UNFINISHED)
-        final_answer = rag.answer_with_rag(all_entries)
+        final_answer = rag.retrieve(user_query=user_input)
 
         print("=== Final Answer ===")
         print("Researcher: ",final_answer)
