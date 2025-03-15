@@ -100,7 +100,7 @@ class RetrievalEngine:
             doc_dicts.append(doc_dict)
         return doc_dicts
     
-    def retrieve(self, user_query:str) -> List[Dict[str, Any]]:
+    def retrieve(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         """
         The main function for retrieving documents based on the user query.
         
@@ -108,9 +108,10 @@ class RetrievalEngine:
             user_query (str): The user query to search for relevant documents.
         """
         # Check if we have any documents first:
-        print(user_query)
-
-        results = self.vector_store.similarity_search_with_score(query=user_query, k=self.SEARCH_K) # Get top K results
+        all_results = []
+        for user_query in user_queries:
+            results = self.vector_store.similarity_search_with_score(query=user_query, k=self.SEARCH_K) # Get top K results
+            all_results.extend(results)
         print("Number of results: ", len(results))
 
         # No results found

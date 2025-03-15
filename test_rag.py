@@ -32,11 +32,11 @@ if __name__ == "__main__":
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        print(additional_queries)
         additional_queries.append(user_input)
+        print(additional_queries)
 
         # Attempt to retrieve documents the existing database
-        responses = retrieval_engine.retrieve(user_query=user_input)
+        responses = retrieval_engine.retrieve(user_queries=additional_queries)
 
         # Attempt to retrieve documents via data ingestion
         if not responses:
@@ -56,12 +56,12 @@ if __name__ == "__main__":
                 retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
             # Attempt to retrieve the documents again
-            responses = retrieval_engine.retrieve(user_query=user_input)
+            responses = retrieval_engine.retrieve(user_queries=additional_queries)
 
         print("Responses:", responses)
 
         # Pass to LLM
-        final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input)
+        final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input) # Use original user query
 
         print("=== Final Answer ===")
         print("Researcher: ", final_answer)
