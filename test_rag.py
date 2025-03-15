@@ -3,7 +3,7 @@ import logging
 
 from dotenv import load_dotenv
 
-from src.RAG.RAG_mqr import RetrievalEngine
+from src.RAG.retrieval_engine import RetrievalEngine
 from src.data_pipeline import DataPipeline
 from src.RAG.query_generator import ResearchQueryGenerator
 from src.RAG.query_responder import QueryResponder
