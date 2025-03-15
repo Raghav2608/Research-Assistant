@@ -70,7 +70,7 @@ class QueryResponder:
             retrieved_docs (List[str]): A list of retrieved documents.
         """
         formatted_content = "\n\n".join(
-                                f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
+                                f"Source: {doc['metadata']['link']}\nContent: {doc['page_content']}"
                                 for doc in retrieved_docs
                                 )
         return formatted_content

@@ -73,6 +73,22 @@ class RetrievalEngine:
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
 
+    def convert_docs_to_dicts(self, docs:List[Document]) -> List[Dict[str, Any]]:
+        """
+        Converts the documents into dictionaries containing the page content and metadata.
+
+        Args:
+            docs (List[Document]): A list of documents to convert to dictionaries.
+        """
+        doc_dicts = []
+        for doc in docs:
+            doc_dict = {
+                        "page_content": doc.page_content,
+                        "metadata": doc.metadata
+                        }
+            doc_dicts.append(doc_dict)
+        return doc_dicts
+    
     def retrieve(self, user_query:str) -> List[Dict[str, Any]]:
         """
         The main function for retrieving documents based on the user query.
@@ -101,4 +117,6 @@ class RetrievalEngine:
             print(score)
             print("\n")
             retrieved_docs.append(doc)
+        
+        retrieved_docs = self.convert_docs_to_dicts(retrieved_docs)
         return retrieved_docs
