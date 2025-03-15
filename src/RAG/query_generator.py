@@ -2,6 +2,7 @@ import json
 import urllib.parse
 
 from langchain_openai import ChatOpenAI
+from typing import List
 
 class ResearchQueryGenerator:
     """
@@ -38,7 +39,7 @@ class ResearchQueryGenerator:
         """
         return self.system_prompt_template.format(query=query)
 
-    def generate(self, user_prompt:str):
+    def generate(self, user_prompt:str) -> List[str]:
         """
         Generates multiple variations of a research query while handling edge cases.
         - Returns a JSON list of possible queries or an error message.
@@ -74,6 +75,10 @@ class ResearchQueryGenerator:
             return ["ERROR: Failed to generate valid queries. Please try again."]
         
     def clean_search_query(self,search_query: str) -> str:
-        """Encode the query so it doesn't contain invalid URL chars."""
-        # Instead of just replacing spaces with '+', let's do a robust encoding
+        """
+        Cleans the search query by replacing spaces with '+'.
+
+        Args:
+            search_query (str): The search query to clean.
+        """
         return urllib.parse.quote_plus(search_query)
