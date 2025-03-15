@@ -62,20 +62,38 @@ class QueryResponder:
         # LLMChain for the final QA step
         self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
 
-
     def format_documents(self, retrieved_docs:List[str]) -> str:
-        # Combine content into single string
+        """
+        Formats the retrieved documents into a single string for the LLM model.
+
+        Args:
+            retrieved_docs (List[str]): A list of retrieved documents.
+        """
         formatted_content = "\n\n".join(
                                 f"Source: {doc.metadata['link']}\nContent: {doc.page_content}"
                                 for doc in retrieved_docs
                                 )
-
         return formatted_content
     
     def combine_context_and_question(self, context_text:str, user_query:str) -> Dict[str, str]:
+        """
+        Combines the context and user query into a single dictionary for the LLM model.
+
+        Args:
+            context_text (str): The context text to be passed to the LLM model.
+            user_query (str): The user query to be passed to the LLM model.
+        """
         return {"context": context_text, "question": user_query}
     
     def generate_answer(self, retrieved_docs:List[str], user_query:str) -> str:
+        """
+        Generates an answer based on the retrieved documents and user query by
+        prompting the LLM model.
+
+        Args:
+            retrieved_docs (List[str]): A list of retrieved documents.
+            user_query (str): The user query.
+        """
         formatted_content = self.format_documents(retrieved_docs)
         prompt = self.combine_context_and_question(formatted_content, user_query)
         answer = self.qa_chain.run(prompt)

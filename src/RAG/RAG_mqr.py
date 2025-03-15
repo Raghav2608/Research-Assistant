@@ -6,8 +6,23 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
-class RAG:
+class RetrievalEngine:
+    """
+    A class that handles the retrieval of documents based on user queries.
+
+    - First it attempts to retrieve relevant documents from the existing database.
+    - If no relevant documents are found:
+        - It searches for more documents via data ingestion.
+        - It then converts the retrieved entries to documents and adds them to the ChromaDB.
+        - It then attempts to retrieve the documents again.
+    """
     def __init__(self, openai_api_key:str):
+        """
+        Initialize the Retrieval Engine with the OpenAI API key and the ChromaDB.
+
+        Args:
+            openai_api_key (str): The OpenAI API key for the OpenAI services.
+        """
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
         embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
@@ -26,6 +41,13 @@ class RAG:
 
     
     def convert_entries_to_docs(self, entries:List[Dict[str, str]]) -> List[Document]:
+        """
+        Converts the retrieved entries into document objects.
+
+        Args:
+            entries (List[Dict[str, str]]): A list of retrieved entries containing information
+                                            about the research papers.
+        """
         docs = []
         for entry in entries:
             doc = Document(
@@ -39,15 +61,25 @@ class RAG:
             docs.append(doc)
         return docs
     
-    # Splits and add document to ChromaDB
-    def split_and_add_documents(self, docs:List[Document]):
+    def split_and_add_documents(self, docs:List[Document]) -> None:
+        """
+        Splits the documents into chunks and adds the chunks to the ChromaDB.
+
+        Args:
+            docs (List[Document]): A list of documents to split and add to the ChromaDB.
+        """
         all_splits = self.text_splitter.split_documents(docs)
-        
+
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
 
-    # Retrieval Function
-    def retrieve(self, user_query) -> List[Dict[str, Any]]:
+    def retrieve(self, user_query:str) -> List[Dict[str, Any]]:
+        """
+        The main function for retrieving documents based on the user query.
+        
+        Args:
+            user_query (str): The user query to search for relevant documents.
+        """
         # Check if we have any documents first:
         print(user_query)
         results = self.vector_store.similarity_search_with_score(query=user_query, k=5) # Get top 5 results
@@ -69,6 +101,4 @@ class RAG:
             print(score)
             print("\n")
             retrieved_docs.append(doc)
-
         return retrieved_docs
-    

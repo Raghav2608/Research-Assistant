@@ -3,7 +3,7 @@ import logging
 
 from dotenv import load_dotenv
 
-from src.RAG.RAG_mqr import RAG
+from src.RAG.RAG_mqr import RetrievalEngine
 from src.data_pipeline import DataPipeline
 from src.RAG.query_generator import ResearchQueryGenerator
 from src.RAG.query_responder import QueryResponder
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     data_pipeline = DataPipeline()
     query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY)
-    rag = RAG(openai_api_key=OPENAI_API_KEY)
+    rag = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
     query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
 
     while True:
