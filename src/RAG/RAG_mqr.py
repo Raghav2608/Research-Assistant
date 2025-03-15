@@ -11,11 +11,11 @@ class RAG:
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
         embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
-        self.PERSIST_DIR = "chroma_db"
-        if not os.path.exists(self.PERSIST_DIR):
-            os.makedirs(self.PERSIST_DIR)
+        PERSIST_DIR = "chroma_db"
+        if not os.path.exists(PERSIST_DIR):
+            os.makedirs(PERSIST_DIR)
         
-        self.vector_store = Chroma(persist_directory=self.PERSIST_DIR, embedding_function=embeddings)
+        self.vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
         
         # Initialize Vector Store Retriever
         self.vector_retriever = self.vector_store.as_retriever(
