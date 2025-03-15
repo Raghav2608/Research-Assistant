@@ -32,13 +32,21 @@ class RetrievalEngine:
         
         self.vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
         
-        # Initialize Vector Store Retriever
-        self.vector_retriever = self.vector_store.as_retriever(
-                                                            search_type="mmr",
-                                                            search_kwargs={"k": 4, "fetch_k": 4}
-                                                            )
+        self.initiate_vector_retriever()
+
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 
+    def initiate_vector_retriever(self) -> None:
+        """
+        Initializes the vector retriever for the ChromaDB.
+        - Used to initialise / update the vector retriever after adding documents to the ChromaDB.
+        """
+        SEARCH_K = 5 # Number of documents to return
+        FETCH_K = SEARCH_K * 3 # Number of documents to fetch
+        self.vector_retriever = self.vector_store.as_retriever(
+                                                            search_type="mmr",
+                                                            search_kwargs={"k": SEARCH_K, "fetch_k": FETCH_K}
+                                                            )
     
     def convert_entries_to_docs(self, entries:List[Dict[str, str]]) -> List[Document]:
         """
@@ -73,6 +81,9 @@ class RetrievalEngine:
         # Index chunks into Chroma
         self.vector_store.add_documents(all_splits)
 
+        # Update the vector retriever
+        self.initiate_vector_retriever() 
+
     def convert_docs_to_dicts(self, docs:List[Document]) -> List[Dict[str, Any]]:
         """
         Converts the documents into dictionaries containing the page content and metadata.
@@ -98,7 +109,8 @@ class RetrievalEngine:
         """
         # Check if we have any documents first:
         print(user_query)
-        results = self.vector_store.similarity_search_with_score(query=user_query, k=5) # Get top 5 results
+
+        results = self.vector_store.similarity_search_with_score(query=user_query, k=self.search_K) # Get top K results
         print("Number of results: ", len(results))
 
         # No results found
