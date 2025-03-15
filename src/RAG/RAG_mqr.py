@@ -92,7 +92,7 @@ class RAG:
         return docs
     
     # Splits and add document to ChromaDB
-    def split_and_add_documents(self, docs:list[Document]):
+    def split_and_add_documents(self, docs:List[Document]):
         all_splits = self.text_splitter.split_documents(docs)
         
         # Index chunks into Chroma
@@ -111,6 +111,10 @@ class RAG:
             return ""
         
         # >=1 results found
+
+        # Sort documents by score:
+        results = sorted(results, key=lambda x: x[1], reverse=True) # Descending order
+
         retrieved_docs = []
         for doc, score in results:
             print(type(doc))
