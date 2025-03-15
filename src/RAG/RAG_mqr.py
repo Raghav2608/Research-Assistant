@@ -3,25 +3,19 @@ import os
 from typing import Dict, List, Any
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from src.data_ingestion.arxiv.utils import fetch_arxiv_papers,parse_papers
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.retrievers import EnsembleRetriever
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain, ConversationalRetrievalChain
-from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
-from langchain_community.retrievers import BM25Retriever
+from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
 class RAG:
     def __init__(self, openai_api_key:str):
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
         self.PERSIST_DIR = "chroma_db"
         if not os.path.exists(self.PERSIST_DIR):
             os.makedirs(self.PERSIST_DIR)
         
-        self.vector_store = Chroma(persist_directory=self.PERSIST_DIR, embedding_function=self.embeddings)
+        self.vector_store = Chroma(persist_directory=self.PERSIST_DIR, embedding_function=embeddings)
         
         # Initialize Vector Store Retriever
         self.vector_retriever = self.vector_store.as_retriever(
