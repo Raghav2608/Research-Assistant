@@ -67,46 +67,47 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
     """
     result = xmltodict.parse(papers_string)
     entries = []
-    
-    for entry in result["feed"]["entry"]:
-        print(entry) 
+    try:
+        for entry in result["feed"]["entry"]:
+            print(entry) 
 
-        if not isinstance(entry, dict):
-            print("Skipping invalid entry")
-            continue
+            if not isinstance(entry, dict):
+                print("Skipping invalid entry")
+                continue
 
-        # Preventing StopIteration error
-        pdf_link = next((link["@href"] for link in entry["link"] if link.get("@title") == "pdf"), None)
+            # Preventing StopIteration error
+            pdf_link = next((link["@href"] for link in entry["link"] if link.get("@title") == "pdf"), None)
 
-        print(entry["author"])
+            print(entry["author"])
 
-        # Ensure author is always a list 
-        if isinstance(entry["author"], dict):
-            entry["author"] = [entry["author"]]
+            # Ensure author is always a list 
+            if isinstance(entry["author"], dict):
+                entry["author"] = [entry["author"]]
 
-        # Fetch content safely
-        content = ""
-        if pdf_link:
-            try:
-                content = fetch_and_extract_pdf_content(pdf_link)
-                if not content.strip():  # If PDF has no text, fallback to summary
-                    print(f"Warning: No extractable text found in PDF for '{entry['title']}'. Using summary instead.")
+            # Fetch content safely
+            content = ""
+            if pdf_link:
+                try:
+                    content = fetch_and_extract_pdf_content(pdf_link)
+                    if not content.strip():  # If PDF has no text, fallback to summary
+                        print(f"Warning: No extractable text found in PDF for '{entry['title']}'. Using summary instead.")
+                        content = entry["summary"]
+                except Exception as e:
+                    print(f"Error fetching PDF for '{entry['title']}': {e}. Using summary instead.")
                     content = entry["summary"]
-            except Exception as e:
-                print(f"Error fetching PDF for '{entry['title']}': {e}. Using summary instead.")
+            else:
+                print(f"Warning: No PDF found for '{entry['title']}'. Using summary instead.")
                 content = entry["summary"]
-        else:
-            print(f"Warning: No PDF found for '{entry['title']}'. Using summary instead.")
-            content = entry["summary"]
 
-        paper_data = {
-            "id": entry["id"],
-            "title": entry["title"],
-            "summary": entry["summary"].strip(),
-            "authors": [author["name"] for author in entry["author"]],
-            "published": entry["published"],
-            "pdf_link": pdf_link if pdf_link else "No PDF available"
-        }
-        entries.append(paper_data)
-
+            paper_data = {
+                "id": entry["id"],
+                "title": entry["title"],
+                "summary": entry["summary"].strip(),
+                "authors": [author["name"] for author in entry["author"]],
+                "published": entry["published"],
+                "pdf_link": pdf_link if pdf_link else "No PDF available"
+            }
+            entries.append(paper_data)
+    except:
+        pass
     return entries
