@@ -12,10 +12,10 @@ ENDPOINT_URLS = {
         "app_name": "app_data_ingestion",
         "path": "/data_ingestion",
     },
-    "rag": {
+    "retrieval": {
         "base_url": "localhost:8002",
-        "app_name": "app_rag",
-        "path": "/rag_pipeline",
+        "app_name": "app_retrieval",
+        "path": "/retrieval",
     },
     "llm_inference": {
         "base_url": "localhost:8003",
