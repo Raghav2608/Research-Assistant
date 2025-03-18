@@ -9,7 +9,7 @@ class DataPipeline:
     This class is responsible for fetching and processing data from various sources.
     """
 
-    def __init__(self, max_total_entries:int=20, min_entries_per_source:int=4):
+    def __init__(self, max_total_entries:int=10, min_entries_per_source:int=3):
         self.data_processing_pipeline = DataProcessingPipeline()
 
         # ADD DATA INGESTION PIPELINES HERE:
