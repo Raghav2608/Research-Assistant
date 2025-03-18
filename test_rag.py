@@ -4,7 +4,7 @@ import logging
 from dotenv import load_dotenv
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
-from backend.src.data_pipeline import DataPipeline
+from backend.src.data_ingestion.data_pipeline import DataPipeline
 from backend.src.RAG.query_generator import ResearchQueryGenerator
 from backend.src.RAG.query_responder import QueryResponder
 

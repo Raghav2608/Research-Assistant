@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
 from backend.src.RAG.query_generator import ResearchQueryGenerator
+from backend.src.RAG.utils import clean_search_query
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
 
@@ -33,11 +34,11 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 
-        user_input = query_request.message
+        user_input = query_request.user_query
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        additional_queries.append(user_input)
+        additional_queries.append(clean_search_query(user_input))
         print(additional_queries)
 
         # Attempt to retrieve documents the existing database
@@ -50,12 +51,10 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
         else:
             logger.info("No relevant documents found, searching for more documents")
 
-            all_entries = []
-            for query in additional_queries:
-                data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"message": query})
-                entries = data_ingestion_result.json()["all_entries"]
-                all_entries.extend(entries)
-            logger.info("Total number of retrieved entries from data ingestion: ", len(all_entries))
+            data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries})
+            all_entries = data_ingestion_result.json()["all_entries"]
+
+            logger.info(f"Total number of retrieved entries from data ingestion: {len(all_entries)}")
             
             if len(all_entries) == 0:
                 logger.info("No entries could be found for this query, please try to rephrase your query.")
