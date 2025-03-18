@@ -1,124 +1,204 @@
 import os
-import time
 import json
+import logging
+from typing import List, Dict
+from multiprocessing import Pool
+from datasets import load_dataset
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
+from rouge_score import rouge_scorer
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.meteor_score import meteor_score
 from clearml import Task, Logger
-from openai import OpenAI
-from bert_score import score  # For semantic similarity evaluation
 
-task = Task.init(
-    project_name="GAP Generative Model",
-    task_name="GPT-4o-mini Hyperparameter Sweep",
-    output_uri=True  # Enable storing artifacts and logs in ClearML
-)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise ValueError("OpenAI API key is missing! Please set it in your environment variables.")
+# Initialise
+task = Task.init(project_name="QASPER Evaluation", task_name="RAG Pipeline Evaluation")
 
-client = OpenAI()
+class QueryResponder:
+    """
+    Class that responds to a user query by combining context and the query, then using an LLM model
+    to generate a context-aware answer.
+    """
+    def __init__(self, openai_api_key: str):
+        os.environ["USER_AGENT"] = "myagent"  
+        self.llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)  
+        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
 
-# Base parameters
-base_params = {
-    "model": "gpt-4o",  
-    "temperature": 0.7,  
-    "max_tokens": 500,  
-    "top_p": 0.9,
-    "frequency_penalty": 0.0,
-    "presence_penalty": 0.6,
-}
-task.connect(base_params)
+        # Memory components
+        summary_memory = ConversationSummaryMemory(
+            llm=self.llm,
+            memory_key="summary_history",
+            input_key="question",
+            output_key="text"
+        )
+        window_memory = ConversationBufferWindowMemory(
+            k=3,
+            memory_key="window_history",
+            input_key="question",
+            output_key="text"
+        )
+        self.combined_memory = CombinedMemory(memories=[summary_memory, window_memory])
 
-# hyperparameter values to sweep
-temperature_values = [0.5, 0.7, 0.9]
-max_tokens_values = [300, 500]
+        answer_prompt_template = """
+        You are a helpful research assistant.
+        Below are relevant excerpts from academic papers:
 
-prompts = [
-    "Summarize the latest research in computer vision.",
-    "Explain the significance of transformer models in AI.",
-    "What are the key challenges in natural language processing today?"
-]
+        {context}
 
-ground_truths = [
-    """Recent computer vision research focuses on transformer-based models like Vision Transformers (ViTs), efficiency-focused architectures like MobileNetV4 for edge computing, physics-inspired vision methods (PhyCV) for image enhancement, and AI-based solutions improving low-light or night vision imaging.""",
-    """Transformer models significantly impacted AI due to their parallel processing capabilities, scalability to large datasets, and versatility across domains like language processing and computer vision, enabling powerful models such as GPT and Vision Transformers.""",
-    """Major NLP challenges include achieving genuine understanding and context-awareness, addressing data-driven biases, ensuring fairness in model outputs, and acquiring high-quality, diverse datasets, particularly for low-resource languages and specialized fields."""
-]
+        The user has asked the following question:
+        {question}
 
-results = {"experiments": []}
+        Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context.
+        Use the format [Source: link] (link will be given to you with every paper right after the word "Source").
+        """
+        answer_prompt = PromptTemplate(
+            template=answer_prompt_template,
+            input_variables=["context", "question"]
+        )
+        self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
 
-# Loop over each combination of hyperparameters
-experiment_iteration = 1
-for temp in temperature_values:
-    for max_tok in max_tokens_values:
-        base_params["temperature"] = temp
-        base_params["max_tokens"] = max_tok
+    def format_documents(self, retrieved_docs: List[Dict]) -> str:
+        """
+        Formats the retrieved documents into a single string for the LLM model.
+        """
+        formatted_content = "\n\n".join(
+            f"Source: {doc['metadata']['link']}\nTitle: {doc['metadata'].get('title', 'No title')}\nContent: {doc['page_content']}"
+            for doc in retrieved_docs
+        )
+        return formatted_content
 
-        for i, prompt in enumerate(prompts):
-            start_time = time.time()
+    def combine_context_and_question(self, context_text: str, user_query: str) -> Dict[str, str]:
+        """
+        Combines the context and user query into a dictionary.
+        """
+        return {"context": context_text, "question": user_query}
 
-            response = client.chat.completions.create(
-                model=base_params["model"],
-                messages=[{"role": "user", "content": prompt}],
-                temperature=base_params["temperature"],
-                max_tokens=base_params["max_tokens"],
-                top_p=base_params["top_p"],
-                frequency_penalty=base_params["frequency_penalty"],
-                presence_penalty=base_params["presence_penalty"]
-            )
-            
-            latency = time.time() - start_time
+    def generate_answer(self, retrieved_docs: List[Dict], user_query: str) -> str:
+        """
+        Generates an answer based on retrieved documents and the user query.
+        """
+        try:
+            formatted_content = self.format_documents(retrieved_docs)
+            prompt = self.combine_context_and_question(formatted_content, user_query)
+            answer = self.qa_chain.invoke(prompt)
+            return answer["text"] 
+        except Exception as e:
+            logger.error(f"Error generating answer: {e}")
+            return "Error generating answer."
 
-            # model output and token usage
-            gpt_output = response.choices[0].message.content
-            total_tokens = response.usage.total_tokens
+def retrieve_relevant_docs(paper):
+    """
+    Placeholder retrieval function.
+    Returns a list of documents. Here, it uses the paper's abstract as context.
+    """
+    return [{
+        "metadata": {"link": "https://example.com/paper", "title": paper.get("title", "No title")},
+        "page_content": paper.get("abstract", "No abstract available.")
+    }]
 
-            # Evaluate with BERTScore
-            if i < len(ground_truths):  
-                P, R, F1 = score([gpt_output], [ground_truths[i]], lang="en", model_type="bert-base-uncased")
-                bertscore_f1 = F1.mean().item()  # F1 score for evaluation
-            else:
-                bertscore_f1 = None  # No ground truth available for this prompt
-
-            logger = Logger.current_logger()
-            logger.report_text(f"Prompt: {prompt}")
-            logger.report_text(f"Response: {gpt_output}")
-            logger.report_scalar("Latency", "response_time", latency, iteration=experiment_iteration)
-            logger.report_scalar("Token Usage", "total_tokens", total_tokens, iteration=experiment_iteration)
-            if bertscore_f1 is not None:
-                logger.report_scalar("BERTScore F1", "score", bertscore_f1, iteration=experiment_iteration)
-
-            # Append to container
-            results["experiments"].append({
-                "iteration": experiment_iteration,
-                "prompt": prompt,
-                "temperature": temp,
-                "max_tokens": max_tok,
-                "latency": latency,
-                "tokens": total_tokens,
-                "response": gpt_output,
-                "bertscore_f1": bertscore_f1
+def extract_qa_pairs(dataset_split):
+    """
+    Extracts QA pairs from the QASPER dataset.
+    For each paper, it extracts the title, question, and the first reference answer.
+    """
+    qa_pairs = []
+    for paper in dataset_split:
+        title = paper.get("title", "No title")
+        for qa in paper.get("qas", []):
+            question = qa.get("question", "No question")
+            answers = qa.get("answers", [])
+            reference_answer = answers[0].get("answer", "No answer provided.") if answers else "No answer provided."
+            qa_pairs.append({
+                "prompt": f"Title: {title}\nQuestion: {question}",
+                "question": question,
+                "reference_answer": reference_answer,
+                "paper": paper
             })
+    return qa_pairs
 
-            # Print results to console
-            print(f"Iteration {experiment_iteration}:")
-            print(f"  Prompt: {prompt}")
-            print(f"  Temperature: {temp}, Max Tokens: {max_tok}")
-            print(f"  Latency: {latency:.2f} sec, Tokens: {total_tokens}")
-            print(f"  Response: {gpt_output}")
-            if bertscore_f1 is not None:
-                print(f"  BERTScore F1: {bertscore_f1:.4f}")
-            print("\n")
+def process_qa_pair(qa, query_responder):
+    """
+    Processes a single QA pair: retrieves documents, generates an answer, and evaluates it.
+    """
+    retrieved_docs = retrieve_relevant_docs(qa["paper"])
+    generated_answer = query_responder.generate_answer(retrieved_docs, qa["question"])
+    return {
+        "question": qa["question"],
+        "generated_answer": generated_answer,
+        "reference_answer": qa["reference_answer"]
+    }
 
-            experiment_iteration += 1
+def main():
+    logger.info("Loading QASPER dataset...")
+    qasper = load_dataset("allenai/qasper", split="test")
+    
+    logger.info("Extracting QA pairs...")
+    qa_pairs = extract_qa_pairs(qasper)
+    
+    logger.info("Initializing QueryResponder...")
+    query_responder = QueryResponder(openai_api_key="your-api-key")
+    
+    logger.info("Processing QA pairs...")
+    with Pool(processes=4) as pool:  
+        results = pool.starmap(process_qa_pair, [(qa, query_responder) for qa in qa_pairs])
+    
 
-# Save to JSON file
-results_dir = task.get_logger().get_log_directory()
-json_path = os.path.join(results_dir, "experiment_results.json")
-with open(json_path, "w") as f:
-    json.dump(results, f, indent=4)
+    logger.info("Evaluating answers...")
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rougeL'], use_stemmer=True)
+    rouge1_scores, rougeL_scores, bleu_scores, meteor_scores = [], [], [], []
+    
+    for result in results:
+        rouge_scores = scorer.score(result["reference_answer"], result["generated_answer"])
+        rouge1_scores.append(rouge_scores["rouge1"].fmeasure)
+        rougeL_scores.append(rouge_scores["rougeL"].fmeasure)
+        
+        reference = result["reference_answer"].split()
+        generated = result["generated_answer"].split()
+        bleu_scores.append(sentence_bleu([reference], generated))
+        meteor_scores.append(meteor_score([reference], generated))
+    
+   
+    avg_rouge1 = sum(rouge1_scores) / len(rouge1_scores) if rouge1_scores else 0
+    avg_rougeL = sum(rougeL_scores) / len(rougeL_scores) if rougeL_scores else 0
+    avg_bleu = sum(bleu_scores) / len(bleu_scores) if bleu_scores else 0
+    avg_meteor = sum(meteor_scores) / len(meteor_scores) if meteor_scores else 0
+    
+    # Log metrics
+    logger.info("Logging metrics to ClearML...")
+    Logger.current_logger().report_scalar("ROUGE-1", "Average", avg_rouge1)
+    Logger.current_logger().report_scalar("ROUGE-L", "Average", avg_rougeL)
+    Logger.current_logger().report_scalar("BLEU", "Average", avg_bleu)
+    Logger.current_logger().report_scalar("METEOR", "Average", avg_meteor)
+    
+    
+    logger.info("Evaluation Results:")
+    print("\nSample Evaluation Result:")
+    print("Question:", results[0]["question"])
+    print("Reference Answer:", results[0]["reference_answer"])
+    print("Generated Answer:", results[0]["generated_answer"])
+    print("\nAverage Scores:")
+    print("ROUGE-1:", avg_rouge1)
+    print("ROUGE-L:", avg_rougeL)
+    print("BLEU:", avg_bleu)
+    print("METEOR:", avg_meteor)
+    
+    # Save to JSONL file
+    logger.info("Saving results to file...")
+    results_file = 'qasper_evaluation_results.jsonl'
+    with open(results_file, 'w') as f:
+        for result in results:
+            json.dump(result, f)
+            f.write('\n')
+    
+    # Upload results 
+    task.upload_artifact(name="Evaluation Results", artifact_object=results_file)
+    
+    logger.info("Evaluation complete!")
 
-#artifact for ClearML
-task.upload_artifact("GPT-4 Responses", artifact_object=json_path)
-
-
-task.close()
+if __name__ == "__main__":
+    main()
