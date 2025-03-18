@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     BASE_WEBAPP_URL = "http://localhost:8000"
     SYSTEM_URL = BASE_WEBAPP_URL + ENDPOINT_URLS['web_app']['additional_paths']['query']
-    payload = {"message": "Are there any recent advancements in transformer models?"}
+    payload = {"user_query": "Are there any recent advancements in transformer models?"}
     
     response = requests.post(SYSTEM_URL, json=payload)
 

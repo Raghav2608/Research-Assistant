@@ -1,6 +1,5 @@
 from typing import List, Dict, Any
 
-from backend.src.data_ingestion.arxiv.topic_extractor import TopicExtractor
 from backend.src.data_processing.pipeline import DataProcessingPipeline
 from backend.src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
 
@@ -11,7 +10,6 @@ class DataPipeline:
     """
 
     def __init__(self):
-        self.topic_extractor = TopicExtractor()
         self.data_processing_pipeline = DataProcessingPipeline()
 
         # ADD DATA INGESTION PIPELINES HERE:
@@ -20,21 +18,21 @@ class DataPipeline:
         #########################################
         #########################################
 
-    def run(self, user_query:str) -> List[Dict[str, Any]]:
+    def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         all_entries = []
 
         # Fetch entries from all data ingestion pipelines
-        topic = self.topic_extractor([user_query])[0]
-        arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(topic=topic, max_results=4)
+        for query in user_queries:
+            arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(topic=query, max_results=4)
 
-        # Add entries from all data ingestion pipelines into a single list
-        all_entries.extend(arxiv_entries)
+            # ADD MORE DATA INGESTION PIPELINES HERE:
+            #########################################
+            #########################################
+            #########################################
 
-        # ADD MORE DATA INGESTION PIPELINES HERE:
-        #########################################
-        #########################################
-        #########################################
-
+            # Add entries from all data ingestion pipelines into a single list
+            all_entries.extend(arxiv_entries)
+        
         # Process all entries
         all_entries = self.data_processing_pipeline.process(all_entries)
         return all_entries

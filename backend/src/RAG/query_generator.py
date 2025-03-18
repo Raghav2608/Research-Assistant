@@ -1,8 +1,9 @@
 import json
-import urllib.parse
 
 from langchain_openai import ChatOpenAI
 from typing import List
+
+from backend.src.RAG.utils import clean_search_query
 
 class ResearchQueryGenerator:
     """
@@ -52,7 +53,7 @@ class ResearchQueryGenerator:
 
         try:
             query_variations = json.loads(generated_query)
-            query_variations = [self.clean_search_query(query) for query in query_variations]
+            query_variations = [clean_search_query(query) for query in query_variations]
 
             print("Q", query_variations)
 
@@ -73,12 +74,3 @@ class ResearchQueryGenerator:
             return ["ERROR: Failed to generate valid queries. Please try again."]
         except ValueError:
             return ["ERROR: Failed to generate valid queries. Please try again."]
-        
-    def clean_search_query(self,search_query: str) -> str:
-        """
-        Cleans the search query by replacing spaces with '+'.
-
-        Args:
-            search_query (str): The search query to clean.
-        """
-        return urllib.parse.quote_plus(search_query)
