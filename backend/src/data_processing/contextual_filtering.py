@@ -1,9 +1,10 @@
 import torch
-import numpy as np
+
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
-from src.chunking.chunker import Chunker
 from typing import List, Dict, Tuple
+
+from backend.src.chunking.chunker import Chunker
 
 class ContextualFilter:
     """

@@ -6,11 +6,10 @@ import requests
 from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 
-from src.RAG.retrieval_engine import RetrievalEngine
-from src.RAG.query_generator import ResearchQueryGenerator
-
-from src.backend.pydantic_models import ResearchPaperQuery
-from src.constants import ENDPOINT_URLS
+from backend.src.RAG.retrieval_engine import RetrievalEngine
+from backend.src.RAG.query_generator import ResearchQueryGenerator
+from backend.src.backend.pydantic_models import ResearchPaperQuery
+from backend.src.constants import ENDPOINT_URLS
 
 load_dotenv()
 

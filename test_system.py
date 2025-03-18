@@ -1,6 +1,6 @@
 import requests
 
-from src.constants import ENDPOINT_URLS
+from backend.src.constants import ENDPOINT_URLS
 
 if __name__ == "__main__":
 

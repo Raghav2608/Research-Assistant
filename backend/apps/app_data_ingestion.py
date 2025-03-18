@@ -3,9 +3,9 @@ import logging
 
 from fastapi import FastAPI, HTTPException, Body
 
-from src.backend.pydantic_models import ResearchPaperQuery
-from src.constants import ENDPOINT_URLS
-from src.data_pipeline import DataPipeline
+from backend.src.backend.pydantic_models import ResearchPaperQuery
+from backend.src.constants import ENDPOINT_URLS
+from backend.src.data_pipeline import DataPipeline
 
 app = FastAPI()
 logger = logging.getLogger('uvicorn.error')

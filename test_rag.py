@@ -3,10 +3,10 @@ import logging
 
 from dotenv import load_dotenv
 
-from src.RAG.retrieval_engine import RetrievalEngine
-from src.data_pipeline import DataPipeline
-from src.RAG.query_generator import ResearchQueryGenerator
-from src.RAG.query_responder import QueryResponder
+from backend.src.RAG.retrieval_engine import RetrievalEngine
+from backend.src.data_pipeline import DataPipeline
+from backend.src.RAG.query_generator import ResearchQueryGenerator
+from backend.src.RAG.query_responder import QueryResponder
 
 if __name__ == "__main__":
 

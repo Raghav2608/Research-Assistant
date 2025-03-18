@@ -1,8 +1,8 @@
 from typing import List, Dict, Any
 
-from src.data_ingestion.arxiv.topic_extractor import TopicExtractor
-from src.data_processing.pipeline import DataProcessingPipeline
-from src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
+from backend.src.data_ingestion.arxiv.topic_extractor import TopicExtractor
+from backend.src.data_processing.pipeline import DataProcessingPipeline
+from backend.src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
 
 class DataPipeline:
     """

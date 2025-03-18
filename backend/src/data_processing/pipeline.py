@@ -1,7 +1,7 @@
 import time
 from typing import Dict, Any
 
-from src.data_processing.entry_processor import EntryProcessor
+from backend.src.data_processing.entry_processor import EntryProcessor
 
 class DataProcessingPipeline:
     """
