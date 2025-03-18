@@ -11,7 +11,7 @@ app = FastAPI(title="Research Assistant API")
 logger = logging.getLogger('uvicorn.error')
 
 # Root endpoint just to check if the API is running.
-@app.get(ENDPOINT_URLS['web_app']['path'], summary="Root", description="Root endpoint.")
+@app.get(ENDPOINT_URLS['web_app']['path'], description="The endpoint for the web-application")
 async def root():
     return {"message": "Hello from the AI Research Paper Assistant"}
 
