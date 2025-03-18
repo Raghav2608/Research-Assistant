@@ -28,11 +28,11 @@ async def query_system(query_request:ResearchPaperQuery=Body(...)):
 
         logger.info("Calling LLM inference endpoint")
         LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
-        requests.post(url=LLM_INFERENCE_URL, json={"prompt": query_request.message})
-
+        llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.message, "responses": responses})
         logger.info(f"Successfully called the system.")
-
-        return {"answer": None}
+        llm_response = llm_response.json()["answer"]
+        
+        return {"answer": llm_response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

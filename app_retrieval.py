@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 from src.RAG.retrieval_engine import RetrievalEngine
 from src.RAG.query_generator import ResearchQueryGenerator
-from src.RAG.query_responder import QueryResponder
 
 from src.backend.pydantic_models import ResearchPaperQuery
 from src.constants import ENDPOINT_URLS
@@ -27,10 +26,8 @@ if not OPENAI_API_KEY:
 
 query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY)
 retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
-query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
 
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
-
 
 @app.post(ENDPOINT_URLS['retrieval']['path'], description="Retrieves documents based on the user query.")
 async def retrieve_documents(query_request:ResearchPaperQuery):
