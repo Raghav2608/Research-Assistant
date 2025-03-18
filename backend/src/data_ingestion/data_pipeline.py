@@ -28,6 +28,13 @@ class DataPipeline:
         self.min_entries_per_query = min_entries_per_query
 
     def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
+        """
+        Fetches data from various sources using the user queries and processes
+        the data to standardise the structure of the entries.
+
+        Args:
+            user_queries (List[str]): The list of user queries to fetch data for.
+        """
         all_entries = []
 
         # Fetch entries from all data ingestion pipelines
