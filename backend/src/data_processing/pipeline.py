@@ -23,16 +23,10 @@ class DataProcessingPipeline:
             try:
                 start_time = time.perf_counter()
                 print(f"Paper: {i+1}")
-                paper_content = entry["content"]
-                print(paper_content)
-                print("Number of characters (before processing):", len(paper_content))
 
                 # Process the entry (in-place)
                 entries[i] = self.entry_processor(entry)
-
-                processed_content = entry["content"]
-                print(processed_content)
-                print("Number of characters (after processing):", len(processed_content))
+                
                 print("\n")
                 end_time = time.perf_counter()
                 time_takens.append(end_time-start_time)

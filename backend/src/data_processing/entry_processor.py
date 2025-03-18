@@ -43,6 +43,7 @@ class EntryProcessor:
                                     "pdf_link": str,
                                     "content": str
                                     }
+        self.acceptable_missing_keys = ["authors", "published", "pdf_link", "content"]
     
     def validate_entry(self, entry:Dict[str, Any]) -> None:
         """
@@ -54,8 +55,8 @@ class EntryProcessor:
             entry (Dict[str, Any]): The paper entry to validate.
         """
         for key, value_type in self.entries_requirements.items():
-            if key not in entry:
-                raise ValueError(f"Entry is missing key: {key}")
+            if key not in entry and key in self.acceptable_missing_keys: # Skip missing keys that are acceptable
+                continue
             if not isinstance(entry[key], value_type):
                 raise ValueError(f"Entry key: {key} has the wrong type: {type(entry[key])}, expected: {value_type}")
         
@@ -91,6 +92,7 @@ class EntryProcessor:
             entry (Dict[str, Any]): The paper entry to process.
         """
         self.validate_entry(entry)
-        entry["content"] = self.text_preprocessor(entry["content"])
+        if "content" in entry:
+            entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
         return entry
