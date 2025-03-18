@@ -1,6 +1,7 @@
-from src.data_processing.text_preprocessor import TextPreprocessor
 from typing import Dict, Any
 from datetime import datetime
+
+from backend.src.data_processing.text_preprocessor import TextPreprocessor
 
 class EntryProcessor:
     """

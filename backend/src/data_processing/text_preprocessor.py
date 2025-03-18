@@ -2,9 +2,10 @@ import re
 import nltk
 import wordninja
 from nltk.corpus import wordnet, stopwords
-from src.data_processing.contextual_filtering import ContextualFilter
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+
+from backend.src.data_processing.contextual_filtering import ContextualFilter
 
 nltk.download('wordnet')
 nltk.download('omw-1.4') # WordNet 1.4

@@ -1,6 +1,8 @@
-from src.data_ingestion.arxiv.topic_extractor import TopicExtractor
-from src.data_processing.pipeline import DataProcessingPipeline
-from src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
+from typing import List, Dict, Any
+
+from backend.src.data_ingestion.arxiv.topic_extractor import TopicExtractor
+from backend.src.data_processing.pipeline import DataProcessingPipeline
+from backend.src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
 
 class DataPipeline:
     """
@@ -18,7 +20,7 @@ class DataPipeline:
         #########################################
         #########################################
 
-    def run(self, user_query:str):
+    def run(self, user_query:str) -> List[Dict[str, Any]]:
         all_entries = []
 
         # Fetch entries from all data ingestion pipelines
