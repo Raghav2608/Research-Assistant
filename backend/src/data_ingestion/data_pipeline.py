@@ -9,7 +9,14 @@ class DataPipeline:
     This class is responsible for fetching and processing data from various sources.
     """
 
-    def __init__(self, max_total_entries:int=10, min_entries_per_source:int=3):
+    def __init__(self, max_total_entries:int=10, min_entries_per_query:int=3):
+        """
+        Initialises the data pipeline with the specified parameters.
+
+        Args:
+            max_total_entries (int): The maximum total number of entries to fetch given a list of user queries.
+            min_entries_per_query (int): The minimum number of entries to fetch from each user query.
+        """
         self.data_processing_pipeline = DataProcessingPipeline()
 
         # ADD DATA INGESTION PIPELINES HERE:
@@ -18,23 +25,20 @@ class DataPipeline:
         #########################################
         #########################################
         self.max_total_entries = max_total_entries
-        self.min_entries_per_source = min_entries_per_source
+        self.min_entries_per_query = min_entries_per_query
 
     def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         all_entries = []
 
         # Fetch entries from all data ingestion pipelines
         for query in user_queries:
-            if len(all_entries) >= self.max_total_entries:
-                break
-            
             remaining_entries_left = self.max_total_entries - len(all_entries)
             arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
                                                                             topic=query, 
                                                                             max_results=min(
-                                                                                            self.min_entries_per_source, 
+                                                                                            self.min_entries_per_query, 
                                                                                             remaining_entries_left
-                                                                                            )
+                                                                                            ) + 1 # +1 as this is non-inclusive
                                                                             )
 
             # ADD MORE DATA INGESTION PIPELINES HERE:
@@ -43,7 +47,10 @@ class DataPipeline:
             #########################################
 
             # Add entries from all data ingestion pipelines into a single list
-            all_entries.extend(arxiv_entries)
+            for entry in arxiv_entries:
+                if len(all_entries) >= self.max_total_entries:
+                    break
+                all_entries.append(entry)
 
         # Process all entries
         all_entries = self.data_processing_pipeline.process(all_entries)
