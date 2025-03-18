@@ -37,4 +37,4 @@ async def query_system(query_request:ResearchPaperQuery=Body(...)):
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
-    uvicorn.run("app_frontend:app", host="localhost", port=8000, reload=True)
+    uvicorn.run("app_webapp:app", host="localhost", port=8000, reload=True)
