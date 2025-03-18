@@ -1,0 +1,50 @@
+"use client";
+
+import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
+import SendButton from "./SendButton";
+import Message, { Sender } from "@/types/Message";
+
+export interface ChatboxProps {
+  addMessage: (msg: Message) => void;
+}
+
+export default function Chatbox({ addMessage }: ChatboxProps) {
+  const [chatInput, setChatInput] = useState<string>("");
+
+  function send(): void {
+    // Check if the input is empty
+    if (chatInput == "") return;
+    
+    addMessage({ message: chatInput, sender: Sender.User });
+    addMessage({ message: chatInput, sender: Sender.Bot });
+    setChatInput("");
+    
+  }
+
+  function handleEnter(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      send();
+    }
+  }
+
+  return (
+    <div className="sticky bottom-10 pb-2 bg-light w-full flex flex-row justify-center gap-0">
+      <input
+        placeholder="Type your query here..."
+        type="text"
+        value={chatInput}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          setChatInput(e.target.value);
+        }}
+        onKeyDown={handleEnter}
+        className="w-3/5 px-10 py-5 border border-light rounded-full bg-lightest text-white text-3xl placeholder-white placeholder-opacity-50 placeholder- focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+      <SendButton
+        chatInput={chatInput}
+        setChatInput={setChatInput}
+        send={send}
+      />
+    </div>
+  );
+}
