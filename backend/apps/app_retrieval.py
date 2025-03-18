@@ -50,11 +50,11 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
             logger.info("Relevant documents found in the existing database")
         else:
             logger.info("No relevant documents found, searching for more documents")
-            
+
             data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries})
             all_entries = data_ingestion_result.json()["all_entries"]
 
-            logger.info("Total number of retrieved entries from data ingestion: ", len(all_entries))
+            logger.info(f"Total number of retrieved entries from data ingestion: {len(all_entries)}")
             
             if len(all_entries) == 0:
                 logger.info("No entries could be found for this query, please try to rephrase your query.")

@@ -29,7 +29,7 @@ async def query_system(query_request:ResearchPaperQuery=Body(...)):
         logger.info("Calling LLM inference endpoint")
         LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
         llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses})
-        logger.info(f"Successfully called the system.")
+        logger.info("Successfully called the system.")
         llm_response = llm_response.json()["answer"]
         
         return {"answer": llm_response}
