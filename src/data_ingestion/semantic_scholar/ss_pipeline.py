@@ -1,5 +1,3 @@
-# src/data_ingestion/semantic_scholar/semantic_scholar_pipeline.py
-
 from src.data_ingestion.semantic_scholar.utils_ss import fetch_all_semantic_scholar_papers, parse_semantic_scholar_papers
 from typing import List, Dict, Any
 from dotenv import load_dotenv
