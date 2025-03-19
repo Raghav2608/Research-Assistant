@@ -2,7 +2,8 @@ from typing import List, Dict, Any
 
 from src.data_ingestion.arxiv.topic_extractor import TopicExtractor
 from src.data_processing.pipeline import DataProcessingPipeline
-from src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
+from src.data_ingestion.arxiv.arxiv_pipeline import ArXivDataIngestionPipeline
+from src.data_ingestion.semantic_scholar.ss_pipeline import SSDataIngestionPipeline
 
 class DataPipeline:
     """
@@ -16,7 +17,7 @@ class DataPipeline:
 
         # ADD DATA INGESTION PIPELINES HERE:
         self.arxiv_data_ingestion_pipeline = ArXivDataIngestionPipeline()
-        #########################################
+        self.ss_data_ingestion_pipeline = SSDataIngestionPipeline()
         #########################################
         #########################################
 
@@ -26,10 +27,10 @@ class DataPipeline:
         # Fetch entries from all data ingestion pipelines
         topic = self.topic_extractor([user_query])[0]
         arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(topic=topic, max_results=4)
-
+        ss_entries = self.ss_data_ingestion_pipeline.get_entries(topic=topic, max_results=100, desired_total=20)
         # Add entries from all data ingestion pipelines into a single list
         all_entries.extend(arxiv_entries)
-
+        all_entries.extend(ss_entries)
         # ADD MORE DATA INGESTION PIPELINES HERE:
         #########################################
         #########################################
