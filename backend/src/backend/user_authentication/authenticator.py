@@ -30,6 +30,8 @@ class UserAuthenticator:
         # Load the environment variables
         load_dotenv()
         uri = os.getenv("MONGODB_URI")
+        if not uri:
+            raise Exception("MongoDB URI not found. Please set 'MONGODB_URI' in the environment variables.")
 
         log = logging.getLogger(self.__class__.__name__)
         

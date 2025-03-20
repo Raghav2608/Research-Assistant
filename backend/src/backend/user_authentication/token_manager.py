@@ -16,6 +16,8 @@ class TokenManager:
         # Load the secret key from the environment variables
         load_dotenv()
         self.secret_key = os.getenv("TOKEN_GENERATOR_SECRET_KEY")
+        if not self.secret_key:
+            raise Exception("Secret key not found. Please set 'TOKEN_GENERATOR_SECRET_KEY' in the environment variables.")
         self.token_duration = 1 # In hours
 
     def generate_token(self, user_id:str) -> Dict[str, Union[str, int]]:
