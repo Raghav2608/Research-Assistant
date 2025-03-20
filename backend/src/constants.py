@@ -4,7 +4,8 @@ ENDPOINT_URLS = {
         "app_name": "app_webapp",
         "path": "/",
         "additional_paths": {
-            "query": "/query"
+            "query": "/query",
+            "login": "/login"
         }
     },
     "data_ingestion": {
