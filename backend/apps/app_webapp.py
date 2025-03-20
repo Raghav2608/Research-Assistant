@@ -108,8 +108,11 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
     """
     try:
         # Retrieve authorisation token to make authenticated requests
-        token = request.cookies.get("token")
-        headers = {"Authorization": token}
+        if request.headers.get("Authorization") is None:
+            token = request.cookies.get("token")
+            headers = {"Authorization": token}
+        else:
+            headers = {"Authorization": request.headers.get("Authorization")}
 
         # Call the retrieval endpoint
         logger.info("Calling retrieval endpoint")
