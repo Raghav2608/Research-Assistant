@@ -17,7 +17,7 @@ export default function LoginForm() {
         onSubmit={handleLogin}
         className="bg-lighter p-8 rounded-2xl shadow-lg w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold mb-6 text-primary text-center">login</h2>
+        <h2 className="text-3xl font-bold mb-6 text-primary text-center">Login</h2>
         <input
           type="text"
           placeholder="Username"
