@@ -30,10 +30,13 @@ retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
 
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
 
-@app.post(ENDPOINT_URLS['retrieval']['path'], description="Retrieves documents based on the user query.")
+@app.post(
+        ENDPOINT_URLS['retrieval']['path'], 
+        description="Retrieves documents based on the user query.",
+        dependencies=[Depends(validate_request)]
+        )
 async def retrieve_documents(
                             query_request:ResearchPaperQuery, 
-                            dependencies=[Depends(validate_request)]
                             ):
     try:
         logger.info("Successfully called retrieval pipeline endpoint")

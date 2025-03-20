@@ -15,12 +15,10 @@ data_pipeline = DataPipeline()
 
 @app.post(
         ENDPOINT_URLS['data_ingestion']['path'], 
-        description="Handles data ingestion from various sources."
+        description="Handles data ingestion from various sources.",
+        dependencies=[Depends(validate_request)]
         )
-async def data_ingestion(
-                        query_request:DataIngestionQuery=Body(...), 
-                        dependencies=[Depends(validate_request)]
-                        ):
+async def data_ingestion(query_request:DataIngestionQuery=Body(...)):
     try:
         logger.info(f"Calling data ingestion pipeline with queries: {query_request.user_queries}")
         all_entries = data_pipeline.run(user_queries=query_request.user_queries)

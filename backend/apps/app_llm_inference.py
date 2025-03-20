@@ -19,11 +19,12 @@ if not OPENAI_API_KEY:
     raise EnvironmentError("openai key not set in environment.")
 query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
 
-@app.post(ENDPOINT_URLS['llm_inference']['path'], description="Handles LLM inference.")
-async def llm_inference(
-                        inference_request:LLMInferenceQuery=Body(...), 
-                        dependencies=[Depends(validate_request)]
-                        ):
+@app.post(
+        ENDPOINT_URLS['llm_inference']['path'], 
+        description="Handles LLM inference.",
+        dependencies=[Depends(validate_request)]
+        )
+async def llm_inference(inference_request:LLMInferenceQuery=Body(...)):
     try:
         answer = "Successfully called LLM inference pipeline"
         logger.info(answer)
