@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException, status
-from src.constants import ENDPOINT_URLS
-from src.backend.user_authentication.token_manager import verify_token
+from backend.src.constants import ENDPOINT_URLS
+from backend.src.backend.user_authentication.token_manager import verify_token
 
 def validate_request(request:Request) -> None:
     """

@@ -2,9 +2,9 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from fastapi import status
 
-from src.backend.user_authentication.rate_limiter import RateLimiter
-from src.backend.user_authentication.token_manager import TokenManager
-from src.backend.user_authentication.authenticator import UserAuthenticator
+from backend.src.backend.user_authentication.rate_limiter import RateLimiter
+from backend.src.backend.user_authentication.token_manager import TokenManager
+from backend.src.backend.user_authentication.authenticator import UserAuthenticator
 
 class UserAuthenticationService:
     """
