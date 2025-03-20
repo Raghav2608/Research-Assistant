@@ -84,21 +84,6 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
             if isinstance(entry["author"], dict):
                 entry["author"] = [entry["author"]]
 
-            # Fetch content safely
-            content = ""
-            if pdf_link:
-                try:
-                    content = fetch_and_extract_pdf_content(pdf_link)
-                    if not content.strip():  # If PDF has no text, fallback to summary
-                        print(f"Warning: No extractable text found in PDF for '{entry['title']}'. Using summary instead.")
-                        content = entry["summary"]
-                except Exception as e:
-                    print(f"Error fetching PDF for '{entry['title']}': {e}. Using summary instead.")
-                    content = entry["summary"]
-            else:
-                print(f"Warning: No PDF found for '{entry['title']}'. Using summary instead.")
-                content = entry["summary"]
-
             paper_data = {
                 "id": entry["id"],
                 "title": entry["title"],

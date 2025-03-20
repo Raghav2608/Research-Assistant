@@ -6,8 +6,10 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from .memory import get_by_session_id
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 class QueryResponder:
     """
@@ -16,51 +18,33 @@ class QueryResponder:
     """
     def __init__(self, openai_api_key:str):
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
-        self.llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
-        self.embeddings = OpenAIEmbeddings(model="text-embedding-3-large", api_key=openai_api_key)
-        
-        summary_memory = ConversationSummaryMemory(
-                                                llm=self.llm,
-                                                memory_key="summary_history",
-                                                input_key="question", # The name of the user input in chain
-                                                output_key="text" # The name of the chain's output
-                                                )
-
-        # Keep the last N exchanges in full
-        window_memory = ConversationBufferWindowMemory(
-                                                        k=3, # Number of most recent exchanges to keep 
-                                                        memory_key="window_history",
-                                                        input_key="question",
-                                                        output_key="text"
-                                                        )
-
-        # Combined memory 
-        self.combined_memory = CombinedMemory(
-                                            memories=[
-                                                    summary_memory,
-                                                    window_memory
-                                                    ]
-                                            )
-
 
         answer_prompt_template = """
         You are a helpful research assistant. 
+        Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
+        Use the format [Source: link] (link will be given to you with every paper right after word source).
         Below are relevant excepts from academic papers:
-
         {context}
-
         The user has asked the following question:
         {question}
 
-        Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
-        Use the format [Source: link] (link will be given to you with every paper right after word source).
+        If you find no context then just answer general user queries. if the user query is information specific ask for context
         """
-        answer_prompt = PromptTemplate(
-                                    template=answer_prompt_template,
-                                    input_variables=["context", "question"]
-                                    )
-        # LLMChain for the final QA step
-        self.qa_chain = LLMChain(llm=self.llm, prompt=answer_prompt, memory=self.combined_memory)
+        query_template = ChatPromptTemplate([
+            MessagesPlaceholder(variable_name="history"),
+            ("system", answer_prompt_template)
+            # Equivalently:
+            # MessagesPlaceholder(variable_name="conversation", optional=True)
+        ])
+        
+        chain = query_template | ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
+        
+        self.qa_chain = RunnableWithMessageHistory(
+            chain,
+            get_by_session_id,
+            input_messages_key="question",
+            history_messages_key="history"
+            )
 
     def format_documents(self, retrieved_docs:List[str]) -> str:
         """
@@ -94,7 +78,12 @@ class QueryResponder:
             retrieved_docs (List[str]): A list of retrieved documents.
             user_query (str): The user query.
         """
+        if retrieved_docs is None:
+            answer = self.qa_chain.invoke({"context":"","question":user_query},config={"configurable":{"session_id":"foo"}}).content
+            return answer
+
+
         formatted_content = self.format_documents(retrieved_docs)
         prompt = self.combine_context_and_question(formatted_content, user_query)
-        answer = self.qa_chain.invoke(prompt)
+        answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":"foo"}})
         return answer

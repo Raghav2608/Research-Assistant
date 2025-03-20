@@ -13,7 +13,7 @@ class ArXivDataIngestionPipeline:
             topic (str): The topic to fetch papers for.
             max_results (int): The maximum number of results to return.
         """
-        search_query = f"all:{topic}"
+        search_query = topic
         start = 0
         xml_papers = fetch_arxiv_papers(search_query, start, max_results)
         entries = parse_papers(xml_papers)
