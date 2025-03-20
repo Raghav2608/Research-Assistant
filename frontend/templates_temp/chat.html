@@ -56,28 +56,28 @@
     <div class="chat-container">
         <div class="chat-box" id="chat-box"></div>
         <div class="chat-input">
-            <input type="text" id="message" placeholder="Type a message...">
+            <input type="text" id="user-query" placeholder="Type a message...">
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
     
     <script>
         async function sendMessage() {
-            let messageInput = document.getElementById("message");
+            let userInput = document.getElementById("user-query");
             let chatBox = document.getElementById("chat-box");
-            let message = messageInput.value;
-            if (!message) return;
+            let userQuery = userInput.value;
+            if (!userQuery) return;
             
-            chatBox.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
-            messageInput.value = "";
+            chatBox.innerHTML += `<div><strong>You:</strong> ${userQuery}</div>`;
+            userInput.value = "";
             
-            let response = await fetch("/ask", {
+            let response = await fetch("/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ user_query: userQuery })
             });
             let data = await response.json();
-            chatBox.innerHTML += `<div><strong>Bot:</strong> ${data.answer}</div>`;
+            chatBox.innerHTML += `<div><strong>Bot:</strong> ${data.answer.text}</div>`;
         }
     </script>
 </body>
