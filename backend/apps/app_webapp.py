@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException, Body, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import status
+from fastapi.middleware.cors import CORSMiddleware
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.backend.user_authentication.utils import validate_request
@@ -17,6 +18,21 @@ logger = logging.getLogger('uvicorn.error')
 templates = Jinja2Templates(directory="frontend/templates_temp")
 
 user_authentication_service = UserAuthenticationService(is_testing=True)
+
+
+# Add CORS middleware to allow requests from the frontend (localhost)
+origins = [
+            "http://localhost",
+            "http://localhost:8080",
+            "http://127.0.0.1",
+            ]
+app.add_middleware(
+                    CORSMiddleware,
+                    allow_origins=origins,
+                    allow_credentials=True, # Allows cookies to be sent to the frontend, so that they can make authenticated requests
+                    allow_methods=["GET", "POST", "OPTIONS"],
+                    allow_headers=["Content-Type", "Authorization"],
+                    )
 
 @app.get(ENDPOINT_URLS['web_app']['path'], response_class=HTMLResponse, dependencies=[Depends(validate_request)])
 async def root(request:Request):
