@@ -27,6 +27,14 @@ query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
         dependencies=[Depends(validate_request)]
         )
 async def llm_inference(inference_request:LLMInferenceQuery=Body(...)) -> JSONResponse:
+    """
+    Handles passing the user query along with any additional context to the LLM model
+    for a context-aware response.
+
+    Args:
+        inference_request (LLMInferenceQuery): The request containing the user query
+                                               and retrieved documents.
+    """
     try:
         answer = "Successfully called LLM inference pipeline"
         logger.info(answer)

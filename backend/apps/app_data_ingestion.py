@@ -21,6 +21,12 @@ data_pipeline = DataPipeline()
         dependencies=[Depends(validate_request)]
         )
 async def data_ingestion(query_request:DataIngestionQuery=Body(...)) -> JSONResponse:
+    """
+    Handles data ingestion from various sources such as arXiv, Semantic Scholar, etc.
+
+    Args:
+        query_request (DataIngestionQuery): The request containing the user queries.
+    """
     try:
         logger.info(f"Calling data ingestion pipeline with queries: {query_request.user_queries}")
         all_entries = data_pipeline.run(user_queries=query_request.user_queries)

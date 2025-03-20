@@ -38,6 +38,15 @@ DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDP
         dependencies=[Depends(validate_request)]
         )
 async def retrieve_documents(query_request:ResearchPaperQuery) -> JSONResponse:
+    """
+
+    Retrieves documents based on the user query either through the
+    existing database or by ingesting new data and then retrieving
+    the documents.
+    
+    Args:
+        query_request (ResearchPaperQuery): The request containing the user query.
+    """
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 
