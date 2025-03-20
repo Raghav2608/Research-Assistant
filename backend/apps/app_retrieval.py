@@ -24,7 +24,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise EnvironmentError("openai key not set in environment.")
 
-query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY)
+query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY,session_id="foo")
 retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
 
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
@@ -38,8 +38,10 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        additional_queries.append(clean_search_query(user_input))
         print(additional_queries)
+
+        if additional_queries == "ERROR":
+            return {"responses":"ERROR"}
 
         # Attempt to retrieve documents the existing database
         logger.info("Attempting to retrieve documents from the existing database")

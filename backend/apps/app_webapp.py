@@ -24,13 +24,24 @@ async def query_system(query_request:ResearchPaperQuery=Body(...)):
         RETRIEVAL_URL = f"http://{ENDPOINT_URLS['retrieval']['base_url']}{ENDPOINT_URLS['retrieval']['path']}"
         retrieval_response = requests.post(url=RETRIEVAL_URL, json={"user_query": query_request.user_query})
         responses = retrieval_response.json()["responses"]
-        logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
-
-        logger.info("Calling LLM inference endpoint")
         LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
-        llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses})
-        logger.info("Successfully called the system.")
-        llm_response = llm_response.json()["answer"]
+        
+        if responses == "ERROR":
+            logger.info("received unqueriable user response answering generally")
+            logger.info("Calling LLM inference endpoint")
+            
+
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": ["NONE"]})
+            logger.info("Successfully called the system.")
+            llm_response = llm_response.json()["answer"]
+        
+        else:
+            logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
+            logger.info("Calling LLM inference endpoint")
+            
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses})
+            logger.info("Successfully called the system.")
+            llm_response = llm_response.json()["answer"]
         
         return {"answer": llm_response}
     except Exception as e:

@@ -9,11 +9,7 @@ from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from pydantic import BaseModel, Field
-from langchain_core.runnables import (
-    RunnableLambda,
-    ConfigurableFieldSpec,
-    RunnablePassthrough,
-)
+
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
 

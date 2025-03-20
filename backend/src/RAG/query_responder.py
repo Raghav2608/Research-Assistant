@@ -16,9 +16,11 @@ class QueryResponder:
     Class that responds to a user query by combining the context and user query and
     passing it to an LLM model for a context-aware response.    
     """
-    def __init__(self, openai_api_key:str):
+    def __init__(self, openai_api_key:str,session_id:str):
         os.environ["USER_AGENT"] = "myagent" # Always set a user agent
-
+        
+        self.session_id  = session_id
+        
         answer_prompt_template = """
         You are a helpful research assistant. 
         Please provide a concise, well-structured answer **and include direct quotes or references** from the provided context. 
@@ -78,12 +80,12 @@ class QueryResponder:
             retrieved_docs (List[str]): A list of retrieved documents.
             user_query (str): The user query.
         """
-        if retrieved_docs is None:
-            answer = self.qa_chain.invoke({"context":"","question":user_query},config={"configurable":{"session_id":"foo"}}).content
+        if len(retrieved_docs) == 0 or retrieved_docs is None or retrieved_docs[0] == "NONE":
+            answer = self.qa_chain.invoke({"context":"","question":user_query},config={"configurable":{"session_id":self.session_id}}).content
             return answer
 
 
         formatted_content = self.format_documents(retrieved_docs)
         prompt = self.combine_context_and_question(formatted_content, user_query)
-        answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":"foo"}})
+        answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":self.session_id}}).content
         return answer

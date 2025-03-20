@@ -11,10 +11,17 @@ class ResearchQueryGenerator:
     """
     A class to generate multiple variations of a research query while handling edge cases.
     """
-    def __init__(self, openai_api_key:str):
+    def __init__(self, openai_api_key:str,session_id:str):
+        
+        self.session_id = session_id
+
+
         self.system_prompt_template = """
         
         You are a research assistant specializing in refining user queries for recent research retrieval or retrieval based on given papers.
+        
+        Even if someone asks a question like "Are there any recent developments in "topic"" or adjacent questions generate a query on what you 
+        think is best
         
         Your ONLY output should be valid JSON with no extra text, in the format:
         ["query_variation_1", "query_variation_2", "query_variation_3"]
@@ -68,7 +75,7 @@ class ResearchQueryGenerator:
         Args:
             user_prompt (str): The user's query.
         """
-        generated_query = self.query_chain.invoke({"question":user_prompt},config={"configurable":{"session_id":"foo"}}).content
+        generated_query = self.query_chain.invoke({"question":user_prompt},config={"configurable":{"session_id":self.session_id}}).content
         print(generated_query)
         if "error" in generated_query.lower():
             return "ERROR"

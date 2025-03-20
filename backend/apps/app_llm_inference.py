@@ -16,7 +16,7 @@ if "OPENAI_API_KEY" not in os.environ:
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise EnvironmentError("openai key not set in environment.")
-query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
+query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY,session_id="foo")
 
 @app.post(ENDPOINT_URLS['llm_inference']['path'], description="Handles LLM inference.")
 async def llm_inference(inference_request:LLMInferenceQuery=Body(...)):
