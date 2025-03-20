@@ -30,7 +30,7 @@ class InMemoryHistory(BaseChatMessageHistory, BaseModel):
     def clear(self) -> None:
         self.messages = []
 
-store = {}
+store = {} # <--------- replace this with mongoDB or some other database and then use it to get session by id 
 
 def get_by_session_id(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
