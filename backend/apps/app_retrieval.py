@@ -3,7 +3,7 @@ import uvicorn
 import logging
 import requests
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from dotenv import load_dotenv
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
@@ -11,6 +11,7 @@ from backend.src.RAG.query_generator import ResearchQueryGenerator
 from backend.src.RAG.utils import clean_search_query
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
+from backend.src.backend.user_authentication.utils import validate_request
 
 load_dotenv()
 
@@ -30,7 +31,10 @@ retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
 
 @app.post(ENDPOINT_URLS['retrieval']['path'], description="Retrieves documents based on the user query.")
-async def retrieve_documents(query_request:ResearchPaperQuery):
+async def retrieve_documents(
+                            query_request:ResearchPaperQuery, 
+                            dependencies=[Depends(validate_request)]
+                            ):
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 

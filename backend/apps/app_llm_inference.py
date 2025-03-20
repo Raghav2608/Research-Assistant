@@ -2,10 +2,11 @@ import uvicorn
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Depends
 from backend.src.backend.pydantic_models import LLMInferenceQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.RAG.query_responder import QueryResponder
+from backend.src.backend.user_authentication.utils import validate_request
 
 app = FastAPI()
 logger = logging.getLogger('uvicorn.error')
@@ -19,7 +20,10 @@ if not OPENAI_API_KEY:
 query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
 
 @app.post(ENDPOINT_URLS['llm_inference']['path'], description="Handles LLM inference.")
-async def llm_inference(inference_request:LLMInferenceQuery=Body(...)):
+async def llm_inference(
+                        inference_request:LLMInferenceQuery=Body(...), 
+                        dependencies=[Depends(validate_request)]
+                        ):
     try:
         answer = "Successfully called LLM inference pipeline"
         logger.info(answer)

@@ -1,19 +1,26 @@
 import uvicorn
 import logging
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Depends
 
 from backend.src.backend.pydantic_models import DataIngestionQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.data_ingestion.data_pipeline import DataPipeline
+from backend.src.backend.user_authentication.utils import validate_request
 
 app = FastAPI()
 logger = logging.getLogger('uvicorn.error')
 
 data_pipeline = DataPipeline()
 
-@app.post(ENDPOINT_URLS['data_ingestion']['path'], description="Handles data ingestion from various sources.")
-async def data_ingestion(query_request:DataIngestionQuery=Body(...)):
+@app.post(
+        ENDPOINT_URLS['data_ingestion']['path'], 
+        description="Handles data ingestion from various sources."
+        )
+async def data_ingestion(
+                        query_request:DataIngestionQuery=Body(...), 
+                        dependencies=[Depends(validate_request)]
+                        ):
     try:
         logger.info(f"Calling data ingestion pipeline with queries: {query_request.user_queries}")
         all_entries = data_pipeline.run(user_queries=query_request.user_queries)
