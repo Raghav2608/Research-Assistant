@@ -4,18 +4,21 @@ import requests
 import logging
 
 from fastapi import FastAPI, HTTPException, Body, Request, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.backend.user_authentication.utils import validate_request
+from backend.src.backend.user_authentication.authentication_service import UserAuthenticationService
 
 app = FastAPI(title="Research Assistant API")
 logger = logging.getLogger('uvicorn.error')
 
 templates = Jinja2Templates(directory="frontend/templates_temp")
 
-@app.get(ENDPOINT_URLS['web_app']['path'], response_class=HTMLResponse)
+user_authentication_service = UserAuthenticationService(is_testing=True)
+
+@app.get(ENDPOINT_URLS['web_app']['path'], response_class=HTMLResponse, dependencies=[Depends(validate_request)])
 async def root(request:Request):
     return templates.TemplateResponse(
                                     "index.html", 

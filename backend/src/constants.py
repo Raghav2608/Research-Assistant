@@ -5,7 +5,8 @@ ENDPOINT_URLS = {
         "path": "/",
         "additional_paths": {
             "query": "/query",
-            "login": "/login"
+            "login": "/login",
+            "user_authentication": "/user_authentication",
         }
     },
     "data_ingestion": {
