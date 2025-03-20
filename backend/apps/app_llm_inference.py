@@ -3,6 +3,8 @@ import logging
 import os
 
 from fastapi import FastAPI, HTTPException, Body, Depends
+from fastapi.responses import JSONResponse
+from fastapi import status
 from backend.src.backend.pydantic_models import LLMInferenceQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.RAG.query_responder import QueryResponder
@@ -24,7 +26,7 @@ query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
         description="Handles LLM inference.",
         dependencies=[Depends(validate_request)]
         )
-async def llm_inference(inference_request:LLMInferenceQuery=Body(...)):
+async def llm_inference(inference_request:LLMInferenceQuery=Body(...)) -> JSONResponse:
     try:
         answer = "Successfully called LLM inference pipeline"
         logger.info(answer)
@@ -34,7 +36,7 @@ async def llm_inference(inference_request:LLMInferenceQuery=Body(...)):
                                                         retrieved_docs=responses, 
                                                         user_query=user_query
                                                         ) # Use original user query
-        return {"answer": final_answer}
+        return JSONResponse(content={"answer": final_answer}, status_code=status.HTTP_200_OK)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

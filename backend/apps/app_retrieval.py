@@ -4,6 +4,8 @@ import logging
 import requests
 
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import JSONResponse
+from fastapi import status
 from dotenv import load_dotenv
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
@@ -35,9 +37,7 @@ DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDP
         description="Retrieves documents based on the user query.",
         dependencies=[Depends(validate_request)]
         )
-async def retrieve_documents(
-                            query_request:ResearchPaperQuery, 
-                            ):
+async def retrieve_documents(query_request:ResearchPaperQuery) -> JSONResponse:
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 
@@ -73,7 +73,7 @@ async def retrieve_documents(
             responses = retrieval_engine.retrieve(user_queries=additional_queries)
         
         logger.info(f"Responses: {responses}")
-        return {"responses": responses}
+        return JSONResponse(content={"responses": responses}, status_code=status.HTTP_200_OK)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
