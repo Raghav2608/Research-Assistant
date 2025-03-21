@@ -23,7 +23,7 @@ user_authentication_service = UserAuthenticationService(is_testing=True)
 
 # Add CORS middleware to allow requests from the frontend (localhost)
 origins = [
-            "http://localhost",
+            "http://localhost:3000",
             "http://localhost:8080",
             "http://127.0.0.1",
             ]

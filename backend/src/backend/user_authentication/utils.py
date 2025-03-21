@@ -13,6 +13,10 @@ def validate_request(request:Request) -> None:
     Returns:
         bool: True if the request is authenticated, False otherwise.
     """
+    if request.method == "OPTIONS":
+        # Skip validation for preflight requests
+        return
+    
     message = "You need to login to access this page."
 
     try:
