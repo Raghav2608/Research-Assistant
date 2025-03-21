@@ -32,31 +32,21 @@ if __name__ == "__main__":
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        additional_queries.append(user_input)
-        print(additional_queries)
+        all_entries = []
+        for query in additional_queries:
+            print(query)
+            entries = data_pipeline.run(query)
+            all_entries.extend(entries)
+        print("Total number of retrieved entries from data ingestion: ", len(all_entries))
 
-        # Attempt to retrieve documents the existing database
+        if len(all_entries) == 0:
+            print("No entries could be found for this query, please try to rephrase your query.")
+        else:
+            docs = retrieval_engine.convert_entries_to_docs(entries=all_entries)
+            retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
+
+        # Attempt to retrieve the documents again
         responses = retrieval_engine.retrieve(user_queries=additional_queries)
-
-        # Attempt to retrieve documents via data ingestion
-        if not responses:
-            print("No relevant documents found, searching for more documents")
-
-            all_entries = []
-            for query in additional_queries:
-                print(query)
-                entries = data_pipeline.run(query)
-                all_entries.extend(entries)
-            print("Total number of retrieved entries from data ingestion: ", len(all_entries))
-
-            if len(all_entries) == 0:
-                print("No entries could be found for this query, please try to rephrase your query.")
-            else:
-                docs = retrieval_engine.convert_entries_to_docs(entries=all_entries)
-                retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
-
-            # Attempt to retrieve the documents again
-            responses = retrieval_engine.retrieve(user_queries=additional_queries)
 
         print("Responses:", responses)
 

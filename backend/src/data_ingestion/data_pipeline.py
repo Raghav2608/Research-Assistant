@@ -1,6 +1,4 @@
 from typing import List, Dict, Any
-
-from backend.src.data_ingestion.topic_extractor import TopicExtractor
 from backend.src.data_processing.pipeline import DataProcessingPipeline
 from backend.src.data_ingestion.semantic_scholar.ss_pipeline import SSDataIngestionPipeline
 
@@ -11,9 +9,7 @@ class DataPipeline:
     """
 
     def __init__(self):
-        self.topic_extractor = TopicExtractor()
         self.data_processing_pipeline = DataProcessingPipeline()
-
         # ADD DATA INGESTION PIPELINES HERE:
         self.ss_data_ingestion_pipeline = SSDataIngestionPipeline()
         #########################################
@@ -22,10 +18,7 @@ class DataPipeline:
     def run(self, user_query:str) -> List[Dict[str, Any]]:
         all_entries = []
 
-        # Fetch entries from all data ingestion pipelines
-        topic = self.topic_extractor([user_query])[0]
-        ss_entries = self.ss_data_ingestion_pipeline.get_entries(topic=topic, max_results=100, desired_total=20)
-        # Add entries from all data ingestion pipelines into a single list
+        ss_entries = self.ss_data_ingestion_pipeline.get_entries(topic=user_query, max_results=20, desired_total=10)
         all_entries.extend(ss_entries)
         # ADD MORE DATA INGESTION PIPELINES HERE:
         #########################################

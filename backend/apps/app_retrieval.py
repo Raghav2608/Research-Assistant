@@ -54,9 +54,6 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        additional_queries.append(clean_search_query(user_input))
-        print(additional_queries)
-
         # Attempt to retrieve documents the existing database
         logger.info("Attempting to retrieve documents from the existing database")
         responses = retrieval_engine.retrieve(user_queries=additional_queries)
