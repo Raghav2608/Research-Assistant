@@ -63,7 +63,7 @@ class RetrievalEngine:
                         metadata={
                                 "title": entry["title"],
                                 "published": entry["published"],
-                                "link": entry["pdf_link"],
+                                "link": entry["paper_link"],
                                 },
                         )
             docs.append(doc)
