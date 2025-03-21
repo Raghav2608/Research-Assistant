@@ -11,6 +11,7 @@ from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.backend.user_authentication.utils import validate_request
 from backend.src.backend.user_authentication.authentication_service import UserAuthenticationService
+from backend.src.backend.user_authentication.token_manager import verify_token
 
 app = FastAPI(title="Research Assistant API")
 logger = logging.getLogger('uvicorn.error')
@@ -62,6 +63,20 @@ async def login(request:Request) -> HTMLResponse:
                            that can be used/displayed in the template.
     """
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/whoami", dependencies=[Depends(validate_request)])
+async def whoami(request: Request) -> JSONResponse:
+    """
+    Returns the username of the authenticated user.
+    """
+    payload = verify_token(request)
+    username = payload.get("user_id")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User ID not found in token."
+        )
+    return JSONResponse(content={"username": username}, status_code=status.HTTP_200_OK)
 
 @app.post(ENDPOINT_URLS['web_app']['additional_paths']['user_authentication'], response_class=JSONResponse)
 async def user_authentication(request:Request, username:str=Body(...), password:str=Body(...)) -> JSONResponse:
