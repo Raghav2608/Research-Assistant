@@ -80,7 +80,7 @@ def parse_semantic_scholar_papers(semantic_json: dict, desired_total: int) -> Li
       - "summary"
       - "authors"
       - "published"
-      - "pdf_link"
+      - "paper_link"
       - "citationCount"
       - "influentialCitationCount"
     
@@ -129,11 +129,9 @@ def parse_semantic_scholar_papers(semantic_json: dict, desired_total: int) -> Li
     
     parsed_papers = []
     for paper in final_selection:
-        pdf_link = (
-            paper.get("openAccessPdf", {}).get("url")
-            if paper.get("openAccessPdf") and paper["openAccessPdf"].get("url")
-            else "No PDF available"
-        )
+
+        scholar_link = f"https://www.semanticscholar.org/paper/{paper.get('paperId')}"
+        
         paper_data = {
             "id": paper.get("paperId"),
             "title": paper.get("title"),
@@ -141,7 +139,7 @@ def parse_semantic_scholar_papers(semantic_json: dict, desired_total: int) -> Li
             "summary": (paper.get("abstract") or "").strip(),
             "authors": [author.get("name", "") for author in paper.get("authors", [])],
             "published": str(paper.get("year", "")),
-            "pdf_link": pdf_link,
+            "paper_link": scholar_link,
             "citationCount": paper.get("citationCount", 0),
             "influentialCitationCount": paper.get("influentialCitationCount", 0)
         }

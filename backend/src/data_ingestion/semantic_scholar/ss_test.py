@@ -27,7 +27,7 @@ def main():
             print(f"ID: {paper['id']}")
             print(f"Title: {paper['title']}")
             print(f"Published: {paper['published']}")
-            print(f"PDF Link: {paper['pdf_link']}")
+            print(f"SS Link: {paper['paper_link']}")
             print(f"Citation Count: {paper['citationCount']}")
             print(f"Influential Citation Count: {paper['influentialCitationCount']}")
             print("Authors:", ", ".join(paper['authors']))
