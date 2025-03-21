@@ -9,8 +9,7 @@ export default function LoginForm() {
 
   // On mount, check if user is already authenticated
   useEffect(() => {
-
-    const whoamiurl = `${backendUrl}/whoami`
+    const whoamiurl = `${backendUrl}/whoami`;
     // Call the /whoami endpoint which will return the user info if authenticated
     fetch(whoamiurl, {
       method: "GET",
@@ -66,7 +65,9 @@ export default function LoginForm() {
         onSubmit={handleLogin}
         className="bg-lighter p-8 rounded-2xl shadow-lg w-full max-w-md"
       >
-        <h2 className="text-3xl font-bold mb-6 text-primary text-center">Login</h2>
+        <h2 className="text-3xl font-bold mb-6 text-primary text-center">
+          Login
+        </h2>
         <input
           type="text"
           placeholder="Username"
