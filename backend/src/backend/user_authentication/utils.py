@@ -13,6 +13,10 @@ def validate_request(request:Request) -> None:
     Returns:
         bool: True if the request is authenticated, False otherwise.
     """
+    if request.method == "OPTIONS":
+        # Skip validation for preflight requests
+        return
+    
     message = "You need to login to access this page."
 
     try:
@@ -32,15 +36,7 @@ def handle_unauthenticated_request(request:Request, message:str) -> None:
                            that can be used to check for authentication.
         message (str): The message to inclue in the response.
     """
-    if request.method == "GET":
-        # Redirect to the login page if the user is not authenticated
-        raise HTTPException(
-                            status_code=status.HTTP_302_FOUND,
-                            detail=message,
-                            headers={"Location": ENDPOINT_URLS['web_app']['additional_paths']['login']}
-                            )
-    else:
-        raise HTTPException(
+    raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=message
                             )

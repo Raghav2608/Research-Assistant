@@ -10,15 +10,40 @@ export interface ChatboxProps {
 
 export default function Chatbox({ addMessage }: ChatboxProps) {
   const [chatInput, setChatInput] = useState<string>("");
+  const queryurl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query`;
 
-  function send(): void {
+  async function send(): Promise<void> {
     // Check if the input is empty
     if (chatInput == "") return;
-    
-    addMessage({ message: chatInput, sender: Sender.User });
-    addMessage({ message: chatInput, sender: Sender.Bot });
+
+    const user_query = chatInput;
     setChatInput("");
-    
+
+    addMessage({ message: user_query, sender: Sender.User });
+
+    // Get a response from the API
+    try {
+      const res = await fetch(queryurl, {
+        method: "POST",
+        credentials: "include", // Ensure cookies are sent/received
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_query }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        addMessage({ message: data.answer.text, sender: Sender.Bot });
+      } else {
+        addMessage({
+          message: "Sorry! I am unable to respond to this query",
+          sender: Sender.Bot,
+        });
+      }
+    } catch (error) {
+      console.error("Error processing the request", error);
+    }
   }
 
   function handleEnter(e: KeyboardEvent<HTMLInputElement>) {
