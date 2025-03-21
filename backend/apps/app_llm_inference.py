@@ -9,9 +9,11 @@ from backend.src.backend.pydantic_models import LLMInferenceQuery
 from backend.src.constants import ENDPOINT_URLS
 from backend.src.RAG.query_responder import QueryResponder
 from backend.src.backend.user_authentication.utils import validate_request
+from dotenv import load_dotenv
 
 app = FastAPI()
 logger = logging.getLogger('uvicorn.error')
+load_dotenv()
 
 if "OPENAI_API_KEY" not in os.environ:
     raise EnvironmentError("openai key not set in environment.")

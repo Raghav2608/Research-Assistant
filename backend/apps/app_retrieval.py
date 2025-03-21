@@ -3,7 +3,7 @@ import uvicorn
 import logging
 import requests
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi import status
 from dotenv import load_dotenv
@@ -37,7 +37,7 @@ DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDP
         description="Retrieves documents based on the user query.",
         dependencies=[Depends(validate_request)]
         )
-async def retrieve_documents(query_request:ResearchPaperQuery) -> JSONResponse:
+async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) -> JSONResponse:
     """
 
     Retrieves documents based on the user query either through the
@@ -67,7 +67,7 @@ async def retrieve_documents(query_request:ResearchPaperQuery) -> JSONResponse:
         else:
             logger.info("No relevant documents found, searching for more documents")
 
-            data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries})
+            data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries}, headers=request.headers)
             all_entries = data_ingestion_result.json()["all_entries"]
 
             logger.info(f"Total number of retrieved entries from data ingestion: {len(all_entries)}")
