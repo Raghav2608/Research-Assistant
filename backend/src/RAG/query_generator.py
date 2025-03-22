@@ -82,8 +82,8 @@ class ResearchQueryGenerator:
 
         try:
             query_variations = json.loads(generated_query)
-            query_variations = [clean_search_query(query) for query in query_variations]
-            
+            query_variations = [query for query in query_variations]
+
             print("Q", query_variations)
             if isinstance(query_variations, str) and "ERROR" in query_variations:
             # Return a dict with 'content' and 'artifact' keys

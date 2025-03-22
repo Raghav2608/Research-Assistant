@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 docs = retrieval_engine.convert_entries_to_docs(entries=entries)
                 retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
-            # Attempt to retrieve the documents again
+        # Attempt to retrieve the documents again
             responses = retrieval_engine.retrieve(user_queries=additional_queries)
 
             print("Responses:", responses)
@@ -59,5 +59,5 @@ if __name__ == "__main__":
             # Pass to LLM
             final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input) # Use original user query
 
-            print("=== Final Answer ===")
-            print("Researcher: ", final_answer.content)
+        print("=== Final Answer ===")
+        print("Researcher: ", final_answer)

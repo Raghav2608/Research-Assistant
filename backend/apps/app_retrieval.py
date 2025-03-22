@@ -3,7 +3,9 @@ import uvicorn
 import logging
 import requests
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from fastapi import status
 from dotenv import load_dotenv
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
@@ -11,6 +13,7 @@ from backend.src.RAG.query_generator import ResearchQueryGenerator
 from backend.src.RAG.utils import clean_search_query
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
+from backend.src.backend.user_authentication.utils import validate_request
 
 load_dotenv()
 
@@ -29,8 +32,21 @@ retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
 
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
 
-@app.post(ENDPOINT_URLS['retrieval']['path'], description="Retrieves documents based on the user query.")
-async def retrieve_documents(query_request:ResearchPaperQuery):
+@app.post(
+        ENDPOINT_URLS['retrieval']['path'], 
+        description="Retrieves documents based on the user query.",
+        dependencies=[Depends(validate_request)]
+        )
+async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) -> JSONResponse:
+    """
+
+    Retrieves documents based on the user query either through the
+    existing database or by ingesting new data and then retrieving
+    the documents.
+    
+    Args:
+        query_request (ResearchPaperQuery): The request containing the user query.
+    """
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 
@@ -53,7 +69,7 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
         else:
             logger.info("No relevant documents found, searching for more documents")
 
-            data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries})
+            data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries}, headers=request.headers)
             all_entries = data_ingestion_result.json()["all_entries"]
 
             logger.info(f"Total number of retrieved entries from data ingestion: {len(all_entries)}")
@@ -68,7 +84,7 @@ async def retrieve_documents(query_request:ResearchPaperQuery):
             responses = retrieval_engine.retrieve(user_queries=additional_queries)
         
         logger.info(f"Responses: {responses}")
-        return {"responses": responses}
+        return JSONResponse(content={"responses": responses}, status_code=status.HTTP_200_OK)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
