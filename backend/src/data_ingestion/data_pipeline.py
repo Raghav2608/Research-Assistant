@@ -50,6 +50,71 @@ class DataPipeline:
         print(processed_query)
         return processed_query
     
+    def remove_duplicate_entries(self, entries:List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Removes duplicate entries from the list of entries fetched by
+        comparing the titles of the entries.
+
+        Args:
+            entries (List[Dict[str, Any]]): The list of entries to remove duplicates from.
+        """
+        known_titles = set()
+        unique_entries = []
+
+        for entry in entries:
+            if entry["title"] not in known_titles:
+                known_titles.add(entry["title"])
+                unique_entries.append(entry)
+        return entries
+
+    def select_entries(
+                        self, 
+                        all_arxiv_entries:List[List[Dict[str, Any]]], 
+                        all_ss_entries:List[List[Dict[str, Any]]], 
+                        num_user_queries
+                        ) -> List[Dict[str, Any]]:
+        """
+        Selects entries from the fetched entries for each user query from all of the data sources.
+        
+        For each entry for the final list:
+        - Choose whether to use the ArXiv or Semantic Scholar entries
+        - Choose which entries to use for the corresponding query and data source
+        
+        Args:
+            all_arxiv_entries (List[List[Dict[str, Any]]]): The list of entries fetched from ArXiv for each user query.
+            all_ss_entries (List[List[Dict[str, Any]]]): The list of entries fetched from Semantic Scholar for each user query.
+            num_user_queries (int): The number of user queries.
+        """
+        
+        # Total entries should be NUM_QUERIES * NUM_ENTRIES_PER_QUERY at most.
+        all_entries = []
+        for i in range(self.max_total_entries):
+
+            # Choose whether to use the ArXiv or Semantic Scholar entries
+            use_arxiv = np.random.choice([True, False])
+
+            # Choose which query to use
+            query_idx = np.random.choice(num_user_queries)
+
+            print(i, use_arxiv, query_idx)
+
+            idx = i # Set the i-th entry to fetch
+
+            if use_arxiv:
+                # Choose a random entry from the list of entries fetched for the chosen query if the index is out of bounds
+                if idx >= len(all_arxiv_entries[query_idx]):
+                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+
+                entry = all_arxiv_entries[query_idx][idx] # The i-th entry from the list of entries fetched for the chosen query
+            else:
+                if idx >= len(all_ss_entries[query_idx]):
+                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+
+                entry = all_ss_entries[query_idx][i]
+                
+            all_entries.append(entry)
+        return all_entries
+
     def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         """
         Fetches data from various sources using the user queries and processes
@@ -82,41 +147,9 @@ class DataPipeline:
             all_ss_entries.append(ss_entries)
             print("Num fetched from Semantic Scholar:", len(ss_entries))
 
-        # Total entries should be NUM_QUERIES * NUM_ENTRIES_PER_QUERY at most.
-        final_entries = []
-        for i in range(self.max_total_entries):
+        selected_entries = self.select_entries(all_arxiv_entries=all_arxiv_entries, all_ss_entries=all_ss_entries, num_user_queries=len(user_queries))
 
-            # Choose whether to use the ArXiv or Semantic Scholar entries
-            use_arxiv = np.random.choice([True, False])
-
-            # Choose which query to use
-            query_idx = np.random.choice(len(user_queries))
-
-            print(i, use_arxiv, query_idx)
-
-            idx = i # Set the i-th entry to fetch
-
-            if use_arxiv:
-                # Choose a random entry from the list of entries fetched for the chosen query if the index is out of bounds
-                if idx >= len(all_arxiv_entries[query_idx]):
-                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
-
-                entry = all_arxiv_entries[query_idx][idx] # The i-th entry from the list of entries fetched for the chosen query
-            else:
-                if idx >= len(all_ss_entries[query_idx]):
-                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
-
-                entry = all_ss_entries[query_idx][i]
-                
-            final_entries.append(entry)
-
-        # Remove duplicates by the titles of the entries:
-        known_titles = set()
-        unique_entries = []
-        for entry in final_entries:
-            if entry["title"] not in known_titles:
-                known_titles.add(entry["title"])
-                unique_entries.append(entry)
+        unique_entries = self.remove_duplicate_entries(selected_entries)
         
         # Process all entries
         unique_entries = self.data_processing_pipeline.process(unique_entries)
