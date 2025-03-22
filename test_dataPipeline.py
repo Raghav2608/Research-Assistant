@@ -25,6 +25,7 @@ def main():
     results = pipeline.run(additional_queries)
     
     # Print the processed results
+    print(f"Total entries fetched: {len(results)}")
     print("Processed entries:")
     for entry in results:
         print(entry)
