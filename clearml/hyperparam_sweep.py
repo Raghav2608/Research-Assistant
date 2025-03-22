@@ -37,7 +37,7 @@ def objective_function(**kwargs):
     It runs the RAG pipeline and returns the evaluation metrics.
     """
     # Initialize the QueryResponder with the current hyperparameters
-    from src.RAG.query_responder import QueryResponder
+    from backend.src.RAG.query_responder import QueryResponder
     query_responder = QueryResponder(
         openai_api_key=os.getenv("OPENAI_API_KEY"),
         temperature=kwargs.get("temperature", 0.7),
@@ -49,7 +49,7 @@ def objective_function(**kwargs):
     # Adjust memory window size if needed
     query_responder.combined_memory.memories[1].k = kwargs.get("memory_window_size", 3)
     # Run the evaluation script
-    from src.clearml.track_gpt_experiments import evaluate_arxiv_qa
+    from track_gpt_experiments import evaluate_arxiv_qa
     evaluate_arxiv_qa(query_responder)
     # Retrieve the logged metrics from ClearML
     task = Task.current_task()
