@@ -12,7 +12,7 @@ from datasets import load_dataset
 from clearml import Task, Logger
 
 # Adjust Python path to find your local modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 # Import functions to fetch and parse arXiv papers from your utils.py
 from backend.src.data_ingestion.semantic_scholar.utils_ss import fetch_all_semantic_scholar_papers,parse_semantic_scholar_papers
@@ -152,15 +152,15 @@ def evaluate_arxiv_qa(query_responder:QueryResponder):
 
         # Build a query using the paper_id
         search_query = f"{paper_id}"
-        papers_xml = fetch_all_semantic_scholar_papers(search_query, start=0, max_results=1)
+        papers_xml = fetch_all_semantic_scholar_papers(search_query, limit=10, max_results=1)  # Fixed function call
         logger.info(f"API Response: {papers_xml}")
 
         # Check if the API returned any results
-        if "<opensearch:totalResults>0</opensearch:totalResults>" in papers_xml:
+        if not papers_xml.get("data"):
             logger.warning(f"No paper found for paper id {paper_id}. Skipping sample.")
             continue
 
-        papers = parse_semantic_scholar_papers(papers_xml)
+        papers = parse_semantic_scholar_papers(papers_xml, desired_total=1)  # Ensure desired_total matches max_results
         if not papers:
             logger.warning(f"No paper fetched for paper id {paper_id}. Skipping sample.")
             continue
@@ -181,12 +181,12 @@ def evaluate_arxiv_qa(query_responder:QueryResponder):
 
         # Generate the answer using this single-document context.
         generated_answer = query_responder.generate_answer([document], question)
-       
+    
         # Handle dict return types from generate_answer
         if isinstance(generated_answer, dict):
             generated_answer = generated_answer.get("text") or generated_answer.get("content", "")
         generated_answer = str(generated_answer)
-       
+    
         logger.info(f"--- QA Pair {i+1} ---")
         logger.info(f"Paper ID: {paper_id}")
         logger.info(f"Question: {repr(question)}")
