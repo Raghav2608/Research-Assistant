@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import logging
+import time
 from nltk.translate.meteor_score import meteor_score
 from nltk.translate.bleu_score import sentence_bleu
 from rouge_score import rouge_scorer
@@ -32,9 +33,24 @@ logger = logging.getLogger(__name__)
 # Initialize ClearML task
 task = Task.init(
     project_name="Large Group Project",
-    task_name="RAG Pipeline Arxiv QA Evaluation (Using METEOR, ROUGE, BLEU, BERTScore)",
+    task_name="RAG Pipeline Arxiv QA Evaluation different metrics",
     output_uri=True
 )
+
+def fetch_paper(paper_id):
+    """
+    Fetches the paper content and metadata using the arXiv API.
+    """
+    search_query = f"{paper_id}"
+    papers_xml = fetch_arxiv_papers(search_query, start=0, max_results=1)
+    if "<opensearch:totalResults>0</opensearch:totalResults>" in papers_xml:
+        logger.warning(f"No paper found for paper id {paper_id}.")
+        return None
+    papers = parse_papers(papers_xml)
+    if not papers:
+        logger.warning(f"No paper fetched for paper id {paper_id}.")
+        return None
+    return papers[0]
 
 def calculate_meteor_score(reference, hypothesis):
     """
@@ -117,59 +133,35 @@ def calculate_bertscore(reference, hypothesis):
 
     P, R, F1 = bert_score([hypothesis], [reference], lang="en")
     return F1.mean().item()
-
-def evaluate_arxiv_qa(query_responder):
+def evaluate_arxiv_qa(query_responder, dataset, paper):
     """
-    Loads the taesiri/arxiv_qa dataset, fetches the specific paper using its paper_id,
-    and generates answers using the QueryResponder. The generated answers are then evaluated
-    using METEOR, ROUGE, BLEU, and BERTScore metrics.
+    Evaluates the QueryResponder on the dataset and logs metrics.
     """
-    # Ensure required NLTK resources are downloaded
-    for resource in ['tokenizers/punkt', 'wordnet']:
-        try:
-            nltk.data.find(resource)
-        except LookupError:
-            nltk.download(resource.split('/')[-1])
-   
-    logger.info("Loading taesiri/arxiv_qa dataset...")
-    dataset = load_dataset("taesiri/arxiv_qa", split="train[:2]")  # Adjust slice as needed
-
     results = []
     meteor_scores = []
     bleu_scores = []
     rouge_scores = {"rouge1": [], "rouge2": [], "rougeL": []}
     bert_scores = []
+    latencies = []
+
     logger.info("Generating answers for each QA pair...")
    
     for i, sample in enumerate(dataset):
-        question = sample["question"]
-        reference_answer = sample["answer"]
-        paper_id = sample["paper_id"]
-
-        # Remove 'arXiv:' prefix if present
-        paper_id = paper_id.replace("arXiv:", "")
-        logger.info(f"Fetching paper with ID: {paper_id}")
-
-        # Build a query using the paper_id
-        search_query = f"{paper_id}"
-        papers_xml = fetch_arxiv_papers(search_query, start=0, max_results=1)
-        logger.info(f"API Response: {papers_xml}")
-
-        # Check if the API returned any results
-        if "<opensearch:totalResults>0</opensearch:totalResults>" in papers_xml:
-            logger.warning(f"No paper found for paper id {paper_id}. Skipping sample.")
+        # Ensure sample is a dictionary
+        if not isinstance(sample, dict):
+            logger.error(f"Sample {i} is not a dictionary: {sample}")
             continue
 
-        papers = parse_papers(papers_xml)
-        if not papers:
-            logger.warning(f"No paper fetched for paper id {paper_id}. Skipping sample.")
+        question = sample.get("question")
+        reference_answer = sample.get("answer")
+        if not question or not reference_answer:
+            logger.warning(f"Missing question or answer in sample {i}. Skipping.")
             continue
-        
-        paper = papers[0]
+
         # Use the full PDF content if available; otherwise, fall back to the summary.
         context_text = paper.get("content") or paper.get("summary")
         if not context_text:
-            logger.warning(f"No content available for paper id {paper_id}. Skipping sample.")
+            logger.warning(f"No content available for paper id {paper.get('id')}. Skipping sample.")
             continue
 
         # Build a document in the expected format for QueryResponder:
@@ -180,7 +172,10 @@ def evaluate_arxiv_qa(query_responder):
         }
 
         # Generate the answer using this single-document context.
+        start_time = time.time()  # Start latency measurement
         generated_answer = query_responder.generate_answer([document], question)
+        latency = time.time() - start_time  # End latency measurement
+        latencies.append(latency)
        
         # Handle dict return types from generate_answer
         if isinstance(generated_answer, dict):
@@ -188,7 +183,6 @@ def evaluate_arxiv_qa(query_responder):
         generated_answer = str(generated_answer)
        
         logger.info(f"--- QA Pair {i+1} ---")
-        logger.info(f"Paper ID: {paper_id}")
         logger.info(f"Question: {repr(question)}")
         logger.info(f"Reference Answer (len={len(reference_answer)}): {repr(reference_answer)}")
         logger.info(f"Generated Answer (len={len(generated_answer)}): {repr(generated_answer)}")
@@ -224,8 +218,6 @@ def evaluate_arxiv_qa(query_responder):
             bert_score_value = 0.0
            
         results.append({
-            "paper_id": paper_id,
-            "model": sample["model"],
             "question": question,
             "reference_answer": reference_answer,
             "generated_answer": generated_answer,
@@ -234,7 +226,8 @@ def evaluate_arxiv_qa(query_responder):
             "rouge1_score": rouge_score_value["rouge1"].fmeasure,
             "rouge2_score": rouge_score_value["rouge2"].fmeasure,
             "rougeL_score": rouge_score_value["rougeL"].fmeasure,
-            "bert_score": bert_score_value
+            "bert_score": bert_score_value,
+            "latency": latency
         })
 
     # Calculate average scores
@@ -244,6 +237,7 @@ def evaluate_arxiv_qa(query_responder):
     avg_rouge2 = sum(rouge_scores["rouge2"]) / len(rouge_scores["rouge2"]) if rouge_scores["rouge2"] else 0.0
     avg_rougeL = sum(rouge_scores["rougeL"]) / len(rouge_scores["rougeL"]) if rouge_scores["rougeL"] else 0.0
     avg_bert = sum(bert_scores) / len(bert_scores) if bert_scores else 0.0
+    avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
 
     # Log metrics to ClearML
     logger.info("Logging metrics to ClearML...")
@@ -253,6 +247,7 @@ def evaluate_arxiv_qa(query_responder):
     Logger.current_logger().report_scalar("ROUGE-2", "Average", avg_rouge2, iteration=1)
     Logger.current_logger().report_scalar("ROUGE-L", "Average", avg_rougeL, iteration=1)
     Logger.current_logger().report_scalar("BERTScore", "Average", avg_bert, iteration=1)
+    Logger.current_logger().report_scalar("Latency", "Average", avg_latency, iteration=1)
 
     # Print average scores
     print("\nAverage Scores:")
@@ -262,6 +257,7 @@ def evaluate_arxiv_qa(query_responder):
     print(f"ROUGE-2: {avg_rouge2}")
     print(f"ROUGE-L: {avg_rougeL}")
     print(f"BERTScore: {avg_bert}")
+    print(f"Latency: {avg_latency}")
 
     # Save results to a file
     results_file = 'arxiv_qa_evaluation_results.jsonl'
@@ -279,13 +275,27 @@ def main():
     if not openai_key:
         raise ValueError("OPENAI_API_KEY not found in environment.")
 
-    session_id = "foo"
+    # Generate a unique session ID
+    session_id = "foo"  # You can use a UUID or any unique identifier
 
-    # Initialize only the QueryResponder.
+    # Initialize the QueryResponder
     query_responder = QueryResponder(openai_api_key=openai_key, session_id=session_id)
 
-    # Evaluate the dataset.
-    evaluate_arxiv_qa(query_responder)
+    # Load the dataset
+    from datasets import load_dataset
+    dataset = load_dataset("taesiri/arxiv_qa", split="train[:16]")  # Use the first 16 rows
+
+    # Verify the dataset structure
+    print("First sample in dataset:", dataset[0])
+
+    # Fetch the paper (assuming the first row contains the paper ID)
+    paper_id = dataset[0]["paper_id"].replace("arXiv:", "")  # Extract paper ID from the first row
+    paper = fetch_paper(paper_id)  # Fetch the paper content
+    if not paper:
+        raise ValueError(f"Failed to fetch paper with ID: {paper_id}")
+
+    # Evaluate the dataset
+    evaluate_arxiv_qa(query_responder, dataset, paper)
 
 if __name__ == "__main__":
     main()
