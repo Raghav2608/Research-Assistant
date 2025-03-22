@@ -143,17 +143,16 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
         if responses == "ERROR":
             logger.info("received unqueriable user response answering generally")
             logger.info("Calling LLM inference endpoint")
-            
-
-            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": ["NONE"]})
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses":[]},headers=headers)
             logger.info("Successfully called the system.")
             llm_response = llm_response.json()["answer"]
+            logger.info(llm_response)
         
         else:
             logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
             logger.info("Calling LLM inference endpoint")
             
-            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses})
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses},headers=headers)
             logger.info("Successfully called the system.")
             llm_response = llm_response.json()["answer"]
         

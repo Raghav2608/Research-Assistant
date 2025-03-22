@@ -1,14 +1,8 @@
 import os
-
 from typing import List, Dict
-
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.memory import ConversationBufferWindowMemory, ConversationSummaryMemory, CombinedMemory
+from langchain_openai import ChatOpenAI
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from .memory import get_by_session_id
+from backend.src.RAG.memory import get_by_session_id
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 class QueryResponder:
@@ -80,7 +74,7 @@ class QueryResponder:
             retrieved_docs (List[str]): A list of retrieved documents.
             user_query (str): The user query.
         """
-        if len(retrieved_docs) == 0 or retrieved_docs is None or retrieved_docs[0] == "NONE":
+        if len(retrieved_docs) == 0:
             answer = self.qa_chain.invoke({"context":"","question":user_query},config={"configurable":{"session_id":self.session_id}}).content
             return answer
 

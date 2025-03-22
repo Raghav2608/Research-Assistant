@@ -2,7 +2,7 @@ import uvicorn
 import logging
 import os
 
-from fastapi import FastAPI, HTTPException, Body, Depends
+from fastapi import FastAPI, HTTPException, Body, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi import status
 from backend.src.backend.pydantic_models import LLMInferenceQuery
@@ -22,13 +22,14 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if not OPENAI_API_KEY:
     raise EnvironmentError("openai key not set in environment.")
 query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY,session_id="foo")
+logger.info(query_responder)
 
 @app.post(
         ENDPOINT_URLS['llm_inference']['path'], 
         description="Handles LLM inference.",
         dependencies=[Depends(validate_request)]
         )
-async def llm_inference(inference_request:LLMInferenceQuery=Body(...)) -> JSONResponse:
+async def llm_inference(request:Request,inference_request:LLMInferenceQuery=Body(...)) -> JSONResponse:
     """
     Handles passing the user query along with any additional context to the LLM model
     for a context-aware response.

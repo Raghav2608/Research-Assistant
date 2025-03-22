@@ -34,7 +34,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
 
       if (res.ok) {
         const data = await res.json();
-        addMessage({ message: data.answer.text, sender: Sender.Bot });
+        addMessage({ message: data.answer, sender: Sender.Bot });
       } else {
         addMessage({
           message: "Sorry! I am unable to respond to this query",

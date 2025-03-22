@@ -35,8 +35,7 @@ if __name__ == "__main__":
         print(additional_queries)
 
         if additional_queries == "ERROR":
-            final_answer = query_responder.generate_answer(retrieved_docs=None, user_query=user_input)
-            print(final_answer)
+            final_answer = query_responder.generate_answer(retrieved_docs=[], user_query=user_input)
 
             # Attempt to retrieve documents via data ingestionexit
 
@@ -51,11 +50,9 @@ if __name__ == "__main__":
                 docs = retrieval_engine.convert_entries_to_docs(entries=entries)
                 retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
-        # Attempt to retrieve the documents again
+            # Attempt to retrieve the documents again
             responses = retrieval_engine.retrieve(user_queries=additional_queries)
-
             print("Responses:", responses)
-
             # Pass to LLM
             final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input) # Use original user query
 
