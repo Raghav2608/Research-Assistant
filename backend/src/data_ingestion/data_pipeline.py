@@ -114,6 +114,27 @@ class DataPipeline:
                 
             all_entries.append(entry)
         return all_entries
+    
+    def retrieve_documents(self, user_query:str) -> List[Dict[str, Any]]:
+        """
+        Retrieves documents from all the data sources for the given user query.
+    
+        Args:
+            user_query (str): The user query to fetch data for.
+        """
+        # ArXiv fetching
+        arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
+                                                                        topic=user_query, 
+                                                                        max_results=self.max_total_entries
+                                                                        )
+        # Semantic Scholar fetching
+        ss_entries = self.ss_data_ingestion_pipeline.get_entries(
+                                                                topic=user_query, 
+                                                                max_results=self.max_total_entries,
+                                                                desired_total=self.max_total_entries
+                                                                )   
+        return arxiv_entries, ss_entries  
+
 
     def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         """
@@ -126,28 +147,23 @@ class DataPipeline:
         all_arxiv_entries = []
         all_ss_entries = []
 
-        # Fetch entries from all data ingestion pipelines
+        # Fetch entries from all data ingestion pipelines for each user query
         for query in user_queries:
             processed_query = self.process_query(query)
-        
-            # ArXiv fetching
-            arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
-                                                                            topic=processed_query, 
-                                                                            max_results=self.max_total_entries
-                                                                            )
-            all_arxiv_entries.append(arxiv_entries)
-            print("Num fetched from ArXiv:", len(arxiv_entries))
 
-            # Semantic Scholar fetching
-            ss_entries = self.ss_data_ingestion_pipeline.get_entries(
-                                                                    topic=processed_query, 
-                                                                    max_results=self.max_total_entries,
-                                                                    desired_total=self.max_total_entries
-                                                                    )     
-            all_ss_entries.append(ss_entries)
+            arxiv_entries, ss_entries = self.retrieve_documents(processed_query)
+
+            print("Num fetched from ArXiv:", len(arxiv_entries))
             print("Num fetched from Semantic Scholar:", len(ss_entries))
 
-        selected_entries = self.select_entries(all_arxiv_entries=all_arxiv_entries, all_ss_entries=all_ss_entries, num_user_queries=len(user_queries))
+            all_arxiv_entries.append(arxiv_entries)
+            all_ss_entries.append(ss_entries)
+        
+        selected_entries = self.select_entries(
+                                                all_arxiv_entries=all_arxiv_entries, 
+                                                all_ss_entries=all_ss_entries, 
+                                                num_user_queries=len(user_queries)
+                                                )
 
         unique_entries = self.remove_duplicate_entries(selected_entries)
         
