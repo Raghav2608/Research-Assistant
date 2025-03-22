@@ -30,13 +30,6 @@ nltk.download('wordnet')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize ClearML task
-task = Task.init(
-    project_name="Large Group Project",
-    task_name="RAG Pipeline Arxiv QA Evaluation different metrics",
-    output_uri=True
-)
-
 def fetch_paper(paper_id):
     """
     Fetches the paper content and metadata using the arXiv API.
@@ -133,6 +126,7 @@ def calculate_bertscore(reference, hypothesis):
 
     P, R, F1 = bert_score([hypothesis], [reference], lang="en")
     return F1.mean().item()
+
 def evaluate_arxiv_qa(query_responder, dataset, paper):
     """
     Evaluates the QueryResponder on the dataset and logs metrics.
@@ -265,7 +259,7 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
         for r in results:
             json.dump(r, f, ensure_ascii=False)
             f.write('\n')
-    task.upload_artifact(name="Evaluation Results", artifact_object=results_file)
+    Task.upload_artifact(name="Evaluation Results", artifact_object=results_file)
     logger.info(f"Evaluation complete! Results saved to {results_file}")
 
 def main():
@@ -275,11 +269,38 @@ def main():
     if not openai_key:
         raise ValueError("OPENAI_API_KEY not found in environment.")
 
-    # Generate a unique session ID
-    session_id = "foo"  # You can use a UUID or any unique identifier
+    # Initialize ClearML task
+    task = Task.init(
+        project_name="Large Group Project",
+        task_name="RAG Pipeline Arxiv QA Evaluation different metrics 2",
+        task_type=Task.TaskTypes.training,  # Set task type to training
+        reuse_last_task_id=False,
+        output_uri=True
+    )
 
-    # Initialize the QueryResponder
-    query_responder = QueryResponder(openai_api_key=openai_key, session_id=session_id)
+    # Define hyperparameters
+    hyperparameters = {
+        "temperature": 0.7,
+        "max_tokens": 100,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+    }
+    task.connect(hyperparameters)  # Connect hyperparameters to the task
+
+    # Generate a unique session ID
+    session_id = "foo"  
+
+    # Initialize the QueryResponder with the current hyperparameters
+    query_responder = QueryResponder(
+        openai_api_key=openai_key,
+        session_id=session_id,
+        temperature=hyperparameters["temperature"],
+        max_tokens=hyperparameters["max_tokens"],
+        top_p=hyperparameters["top_p"],
+        frequency_penalty=hyperparameters["frequency_penalty"],
+        presence_penalty=hyperparameters["presence_penalty"],
+    )
 
     # Load the dataset
     from datasets import load_dataset
