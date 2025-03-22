@@ -10,7 +10,7 @@ class DataPipeline:
     This class is responsible for fetching and processing data from various sources.
     """
 
-    def __init__(self, max_total_entries:int=10, min_entries_per_query:int=3):
+    def __init__(self, max_total_entries:int=5, min_entries_per_query:int=3):
         """
         Initialises the data pipeline with the specified parameters.
 
@@ -43,40 +43,35 @@ class DataPipeline:
         # Fetch entries from all data ingestion pipelines
         for query in user_queries:
             remaining_entries_left = self.max_total_entries - len(all_entries)
-            arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
-                                                                            topic=clean_search_query(query), 
-                                                                            max_results=min(
-                                                                                            self.min_entries_per_query, 
-                                                                                            remaining_entries_left
-                                                                                            ) + 1 # +1 as this is non-inclusive
-                                                                            )
+            # arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
+            #                                                                 topic=clean_search_query(query), 
+            #                                                                 max_results=min(
+            #                                                                                 self.min_entries_per_query, 
+            #                                                                                 remaining_entries_left
+            #                                                                                 ) + 1 # +1 as this is non-inclusive
+            #                                                                 )
             # TODO: Implement cleaning search query for semantic scholar as queries do not work as expected.
-            # ss_entries = self.ss_data_ingestion_pipeline.get_entries(
-            #                                                         topic=query, 
-            #                                                         max_results=self.min_entries_per_query, 
-            #                                                         desired_total=remaining_entries_left
-            #                                                         )
-            # ss_entries = self.ss_data_ingestion_pipeline.get_entries(
-            #                                                         topic=query, 
-            #                                                         max_results=20, 
-            #                                                         desired_total=10
-            #                                                         )                                                         
+            ss_entries = self.ss_data_ingestion_pipeline.get_entries(
+                                                                    topic=query, 
+                                                                    max_results=20, # Get 20, but only use "desired_total" number of entries
+                                                                    desired_total=remaining_entries_left
+                                                                    )                                                         
 
             # ADD MORE DATA INGESTION PIPELINES HERE:
             #########################################
             #########################################
 
 
-            # Add entries from all data ingestion pipelines into a single list
-            for entry in arxiv_entries:
-                if len(all_entries) >= self.max_total_entries:
-                    break
-                all_entries.append(entry)
-
-            # for entry in ss_entries:
+            # # Add entries from all data ingestion pipelines into a single list
+            # for entry in arxiv_entries:
             #     if len(all_entries) >= self.max_total_entries:
             #         break
             #     all_entries.append(entry)
+
+            for entry in ss_entries:
+                if len(all_entries) >= self.max_total_entries:
+                    break
+                all_entries.append(entry)
 
         # Process all entries
         all_entries = self.data_processing_pipeline.process(all_entries)

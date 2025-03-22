@@ -9,7 +9,7 @@ def main():
     pipeline = DataPipeline()
     
     # Run the pipeline with the sample query
-    results = pipeline.run(sample_query)
+    results = pipeline.run([sample_query])
     
     # Print the processed results
     print("Processed entries:")
