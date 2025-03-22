@@ -58,12 +58,15 @@ class RetrievalEngine:
         """
         docs = []
         for entry in entries:
+            # "paper_link" for Semantic Scholar, "pdf_link" for ArXiv
+            link = entry.get("paper_link") or entry.get("pdf_link") 
+            
             doc = Document(
                         page_content=entry["summary"],   # Use entry["summary"] to skip parsing
                         metadata={
                                 "title": entry["title"],
                                 "published": entry["published"],
-                                "link": entry["paper_link"],
+                                "link": link
                                 },
                         )
             docs.append(doc)
