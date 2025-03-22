@@ -4,6 +4,23 @@ from clearml.automation import (
     DiscreteParameterRange, HyperParameterOptimizer, RandomSearch,
     UniformParameterRange
 )
+from datasets import load_dataset
+from backend.src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers
+
+def fetch_paper(paper_id):
+    """
+    Fetches the paper content and metadata using the arXiv API.
+    """
+    search_query = f"{paper_id}"
+    papers_xml = fetch_arxiv_papers(search_query, start=0, max_results=1)
+    if "<opensearch:totalResults>0</opensearch:totalResults>" in papers_xml:
+        print(f"No paper found for paper id {paper_id}.")
+        return None
+    papers = parse_papers(papers_xml)
+    if not papers:
+        print(f"No paper fetched for paper id {paper_id}.")
+        return None
+    return papers[0]
 
 def objective_function(**kwargs):
     """
@@ -23,9 +40,18 @@ def objective_function(**kwargs):
         presence_penalty=kwargs.get("presence_penalty", 0.0),
     )
 
+    # Load the dataset
+    dataset = load_dataset("taesiri/arxiv_qa", split="train[:16]")  # Use the first 16 rows
+
+    # Fetch the paper
+    paper_id = dataset[0]["paper_id"].replace("arXiv:", "")  # Extract paper ID from the first row
+    paper = fetch_paper(paper_id)
+    if not paper:
+        raise ValueError(f"Failed to fetch paper with ID: {paper_id}")
+
     # Run the trial script
     from trial import evaluate_arxiv_qa
-    evaluate_arxiv_qa(query_responder)
+    evaluate_arxiv_qa(query_responder, dataset, paper)
 
     # Retrieve the logged metrics from ClearML
     task = Task.current_task()
@@ -39,15 +65,15 @@ def objective_function(**kwargs):
 # Initialize ClearML task
 task = Task.init(
     project_name="Large Group Project",
-    task_name="RAG Pipeline Hyperparameter Optimization",
+    task_name="RAG Pipeline Hyperparameter Optimization 2",
     task_type=Task.TaskTypes.optimizer,
     reuse_last_task_id=False,
-    output_uri=False
+    output_uri=True
 )
 
 # Set up the hyperparameter optimizer
 an_optimizer = HyperParameterOptimizer(
-    base_task_id="d076cc98aa3c42acb03601367ff0e2d1",  # Replace with your base task ID
+    base_task_id="2ff724e7fe0e40588d0c310c21ccf77b",  
     hyper_parameters=[
         UniformParameterRange(name="temperature", min_value=0.1, max_value=1.0, step_size=0.1),
         DiscreteParameterRange(name="max_tokens", values=[50, 100, 200, 300]),
