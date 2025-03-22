@@ -101,16 +101,20 @@ class DataPipeline:
             idx = i # Set the i-th entry to fetch
 
             if use_arxiv:
+                arxiv_entries = all_arxiv_entries[query_idx]
+                num_arxiv_entries = len(arxiv_entries)
                 # Choose a random entry from the list of entries fetched for the chosen query if the index is out of bounds
-                if idx >= len(all_arxiv_entries[query_idx]):
-                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+                if idx >= num_arxiv_entries:
+                    idx = np.random.choice(num_arxiv_entries) 
 
                 entry = all_arxiv_entries[query_idx][idx] # The i-th entry from the list of entries fetched for the chosen query
             else:
-                if idx >= len(all_ss_entries[query_idx]):
-                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+                ss_entries = all_ss_entries[query_idx]
+                num_ss_entries = len(ss_entries)
+                if idx >= num_ss_entries:
+                    idx = np.random.choice(num_ss_entries) 
 
-                entry = all_ss_entries[query_idx][i]
+                entry = all_ss_entries[query_idx][idx]
                 
             all_entries.append(entry)
         return all_entries
