@@ -1,20 +1,32 @@
 import re
 import nltk
 import wordninja
-from nltk.corpus import wordnet
-from src.data_processing.contextual_filtering import ContextualFilter
+from nltk.corpus import wordnet, stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+from backend.src.data_processing.contextual_filtering import ContextualFilter
+
 nltk.download('wordnet')
+nltk.download('omw-1.4') # WordNet 1.4
+nltk.download('stopwords')
+nltk.download("punkt_tab")
+nltk.download('averaged_perceptron_tagger') # For lemmatization
 
 class TextPreprocessor:
     def __init__(self):
         self.contextual_filter = ContextualFilter()
         self.operations = [
                         self.remove_links, 
-                        self.keep_only_alphanumeric, 
-                        self.extract_words,
+                        self.keep_only_alphanumeric,
+                        self.extract_words, # Splits concatenated words
                         self.remove_non_english_words,
+                        self.remove_stopwords,
+                        self.lemmatize,
                         self.remove_repeated_words_and_adjacent_numbers,
                         ]
+        self.lemmatizer = WordNetLemmatizer()
+        self.english_stopwords = set(stopwords.words('english')) # English stopwords
 
     def remove_newlines(self, text:str) -> str:
         """
@@ -104,6 +116,29 @@ class TextPreprocessor:
 
         return " ".join(final_words)
     
+    def lemmatize(self, text:str) -> str:
+        """
+        Lemmatizes the words in the text (i.e., converts words to their base form).
+
+        Args:
+            text (str): The text to lemmatize.
+        """
+        return " ".join([self.lemmatizer.lemmatize(word) for word in word_tokenize(text)])
+    
+    def remove_stopwords(self, text:str) -> str:
+        """
+        Removes English stopwords from the text.
+
+        Args:
+            text (str): The text to remove stopwords from.
+        """
+        all_words = text.split(" ")
+        filtered_words = []
+        for word in all_words:
+            if word.lower() not in self.english_stopwords:
+                filtered_words.append(word)
+        return " ".join(filtered_words)
+    
     def __call__(self, text:str) -> str:
         """
         The main method that applies all the text processing operations to the input text.
@@ -114,6 +149,9 @@ class TextPreprocessor:
         """
         prev = None
         num_repeats = 0
+            
+        text = text.lower()
+        
         while True:
             prev = text
             text = self.remove_newlines(text)
@@ -124,10 +162,12 @@ class TextPreprocessor:
             if text == prev:
                 break
         print("NR", num_repeats)
+        print("Text before contextual filtering:\n", len(text), "!!!", text)
         
         # Apply a single run of contextual filtering.
         text = self.contextual_filter(text)
         for operation in self.operations:
             text = operation(text)
+            print("Text:\n", text)
             text = self.remove_newlines(text)
         return text

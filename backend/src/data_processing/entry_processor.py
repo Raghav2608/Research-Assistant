@@ -1,6 +1,7 @@
-from src.data_processing.text_preprocessor import TextPreprocessor
 from typing import Dict, Any
 from datetime import datetime
+
+from backend.src.data_processing.text_preprocessor import TextPreprocessor
 
 class EntryProcessor:
     """
@@ -8,6 +9,32 @@ class EntryProcessor:
     - Ensures that the entries contain all the required keys and that the values have the correct types.
     - Processes the text content of the entries.
     - Summarises the information about each paper (entry) as a string.
+
+    Entries are expected to be in the following format:
+    {
+        "id": str,
+        "title": str,
+        "summary": str,
+        "authors": List[str],
+        "published": str,
+        "paper_link": str,
+        "content": str (optional),
+        "citationCount": int,
+        "influentialCitationCount": int
+    }
+
+    For example:
+    {
+        "id": "1234.56789",
+        "title": "A Sample Paper Title",
+        "summary": "This paper presents a new method for...",
+        "authors": ["Alice", "Bob"],
+        "published": "2021-01-01",
+        "pdf_link": "https://www.semanticscholar.org/paper/1234.56789",
+        "content": ""
+        "citationCount": 100,
+        "influentialCitationCount": 20
+    }
     """
     def __init__(self):
         self.text_preprocessor = TextPreprocessor()
@@ -17,9 +44,10 @@ class EntryProcessor:
                                     "summary": str,
                                     "authors": list,
                                     "published": str,
-                                    "pdf_link": str,
+                                    "paper_link": str,
                                     "content": str
                                     }
+        self.acceptable_missing_keys = ["authors", "published", "paper_link", "content"]
     
     def validate_entry(self, entry:Dict[str, Any]) -> None:
         """
@@ -31,8 +59,8 @@ class EntryProcessor:
             entry (Dict[str, Any]): The paper entry to validate.
         """
         for key, value_type in self.entries_requirements.items():
-            if key not in entry:
-                raise ValueError(f"Entry is missing key: {key}")
+            if key not in entry and key in self.acceptable_missing_keys: # Skip missing keys that are acceptable
+                continue
             if not isinstance(entry[key], value_type):
                 raise ValueError(f"Entry key: {key} has the wrong type: {type(entry[key])}, expected: {value_type}")
         
@@ -56,15 +84,19 @@ class EntryProcessor:
         paper_string += f"Summary: {entry['summary']}\n"
         paper_string += f"Authors: {', '.join(entry['authors'])}\n"
         paper_string += f"Published: {entry['published']}\n"
-        paper_string += f"PDF Link: {entry['pdf_link']}\n"
+        paper_string += f"Semantic Scholar Link: {entry['paper_link']}\n"
         paper_string += f"Content: {entry['content']}\n"
         return paper_string
     
-    def __call__(self, entry:Dict[str, Any]) -> str:
+    def __call__(self, entry:Dict[str, Any]) -> Dict[str, Any]:
         """
         Processes the text content of an entry.
+
+        Args:
+            entry (Dict[str, Any]): The paper entry to process.
         """
         self.validate_entry(entry)
-        entry["content"] = self.text_preprocessor(entry["content"])
+        if "content" in entry:
+            entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
-        return self.summarise_entry(entry)
+        return entry

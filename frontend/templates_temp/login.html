@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <script>
+        function errorRedirect(error) {
+            console.error('Error:', error);
+            
+            // Set the error message
+            setErrorMessage(message=error.message);
+
+            // Hide the error message after 2.5 seconds
+            setTimeout(() => {
+                const errorMessage = document.getElementById("error-message");
+                errorMessage.style.display = "none";
+            }, 2500);
+        }
+
+        function setErrorMessage(message) {
+            const errorMessage = document.getElementById("error-message");
+            errorMessage.style.display = "block"; 
+            errorMessage.innerHTML = message
+        }
+
+        // Handle the form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Get the form data
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const url = `${window.location.origin}/user_authentication`; // Set the URL to send to be based on the current origin
+
+            try {
+                // Send a POST request to the server, passing the form data as JSON
+                const response = await fetch(
+                    url,
+                    {
+                        method: event.target.method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    }
+                );
+
+                const result = await response.json();
+                
+                // Handle the response based on the 'status' key in the JSON response
+                // (Signed up/Logged in successfully if status is 200 or 201)
+                if (response.status === 200 || response.status === 201) {
+                    window.location.href = '/';
+                } else {
+                    errorRedirect(result);
+                }
+            } 
+            catch (error) {
+                errorRedirect(error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <form id="loginForm" method="POST" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password">
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    <div id="error-message" style="display:none; color:red;"></div> <!-- Error message container, this is set dynamically -->
+</body>
+</html>

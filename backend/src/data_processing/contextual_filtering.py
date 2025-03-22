@@ -1,9 +1,10 @@
 import torch
-import numpy as np
+
 from transformers import BertTokenizer, BertModel
 from sklearn.metrics.pairwise import cosine_similarity
-from src.chunking.chunker import Chunker
 from typing import List, Dict, Tuple
+
+from backend.src.chunking.chunker import Chunker
 
 class ContextualFilter:
     """
@@ -71,9 +72,9 @@ class ContextualFilter:
             token = all_tokens[0][i].item()
             word = self.tokenizer.decode([token])
 
-            if i == 0 or i == num_tokens - 1:
-                keep_words.append(word)
-                continue # Last and first tokens should be kept
+            # Last and first tokens should not be kept (special tokens) i.e., [CLS] and [SEP]
+            if i == 0 or (i == num_tokens - 1):
+                continue
             
             if i < self.context_window:
                 before_embedding = all_embeddings[0][:i].mean(dim=0).unsqueeze(0)
