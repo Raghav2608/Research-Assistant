@@ -4,6 +4,8 @@ from backend.src.data_ingestion.semantic_scholar.ss_pipeline import SSDataIngest
 from backend.src.data_ingestion.arxiv.arxiv_pipeline import ArXivDataIngestionPipeline
 from backend.src.RAG.utils import clean_search_query
 
+import numpy as np
+
 class DataPipeline:
     """
     The main data pipeline class that orchestrates the data ingestion and processing pipelines.
@@ -56,53 +58,62 @@ class DataPipeline:
         Args:
             user_queries (List[str]): The list of user queries to fetch data for.
         """
-        all_entries = []
+        all_arxiv_entries = []
+        all_ss_entries = []
 
         # Fetch entries from all data ingestion pipelines
         for query in user_queries:
-            remaining_entries_left = self.max_total_entries - len(all_entries)
-
-            if remaining_entries_left <= 0:
-                break
-
             processed_query = self.process_query(query)
         
             # ArXiv fetching
             arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
                                                                             topic=processed_query, 
-                                                                            max_results=max(
-                                                                                            self.min_entries_per_query, 
-                                                                                            remaining_entries_left
-                                                                                            )
+                                                                            max_results=self.max_total_entries
                                                                             )
-            for entry in arxiv_entries:
-                if len(all_entries) >= self.max_total_entries:
-                    break
-                all_entries.append(entry)
+            all_arxiv_entries.append(arxiv_entries)
             print("Num fetched from ArXiv:", len(arxiv_entries))
-            
-            # Fetch more data if needed
-            remaining_entries_left = self.max_total_entries - len(all_entries)
-            if remaining_entries_left <= 0:
-                break
-            else:
-                # Semantic scholar fetching
-                ss_entries = self.ss_data_ingestion_pipeline.get_entries(
-                                                                        topic=processed_query, 
-                                                                        max_results=remaining_entries_left,
-                                                                        desired_total=remaining_entries_left
-                                                                        )     
 
-                print("Num fetched from Semantic Scholar:", len(ss_entries), remaining_entries_left)
-                for entry in ss_entries:
-                    if len(all_entries) >= self.max_total_entries:
-                        break
-                    all_entries.append(entry)
-            
+            # Semantic Scholar fetching
+            ss_entries = self.ss_data_ingestion_pipeline.get_entries(
+                                                                    topic=processed_query, 
+                                                                    max_results=self.max_total_entries,
+                                                                    desired_total=self.max_total_entries
+                                                                    )     
+            all_ss_entries.append(ss_entries)
+            print("Num fetched from Semantic Scholar:", len(ss_entries))
+
+        # Total entries should be NUM_QUERIES * NUM_ENTRIES_PER_QUERY at most.
+        final_entries = []
+        for i in range(self.max_total_entries):
+
+            # Choose whether to use the ArXiv or Semantic Scholar entries
+            use_arxiv = np.random.choice([True, False])
+
+            # Choose which query to use
+            query_idx = np.random.choice(len(user_queries))
+
+            print(i, use_arxiv, query_idx)
+
+            idx = i # Set the i-th entry to fetch
+
+            if use_arxiv:
+                # Choose a random entry from the list of entries fetched for the chosen query if the index is out of bounds
+                if idx >= len(all_arxiv_entries[query_idx]):
+                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+
+                entry = all_arxiv_entries[query_idx][idx] # The i-th entry from the list of entries fetched for the chosen query
+            else:
+                if idx >= len(all_ss_entries[query_idx]):
+                    idx = np.random.choice(len(all_arxiv_entries[query_idx])) 
+
+                entry = all_ss_entries[query_idx][i]
+                
+            final_entries.append(entry)
+
         # Remove duplicates by the titles of the entries:
         known_titles = set()
         unique_entries = []
-        for entry in all_entries:
+        for entry in final_entries:
             if entry["title"] not in known_titles:
                 known_titles.add(entry["title"])
                 unique_entries.append(entry)
