@@ -156,7 +156,7 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
         RETRIEVAL_URL = f"http://{ENDPOINT_URLS['retrieval']['base_url']}{ENDPOINT_URLS['retrieval']['path']}"
         retrieval_response = requests.post(
                                             url=RETRIEVAL_URL, 
-                                            json={"user_query": query_request.user_query}, 
+                                            json={"user_query": query_request.user_query, "mode": query_request.mode}, 
                                             headers=headers
                                             )
         responses = retrieval_response.json()["responses"]

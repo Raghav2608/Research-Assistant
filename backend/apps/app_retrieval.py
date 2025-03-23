@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi import status
 from dotenv import load_dotenv
+from typing import List, Dict, Any
 
 from backend.src.RAG.retrieval_engine import RetrievalEngine
 from backend.src.RAG.query_generator import ResearchQueryGenerator
@@ -31,6 +32,33 @@ query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY,session_i
 retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
 
 DATA_INGESTION_URL = f"http://{ENDPOINT_URLS['data_ingestion']['base_url']}{ENDPOINT_URLS['data_ingestion']['path']}"
+
+
+# def use_fast_pipeline(request:Request, additional_queries:List[str]) -> List[Dict[str, Any]]:
+#     # Attempt to retrieve documents the existing database
+#     logger.info("Attempting to retrieve documents from the existing database")
+#     responses = retrieval_engine.retrieve(user_queries=additional_queries)
+
+#     # Attempt to retrieve documents via data ingestion
+#     if responses:
+#         logger.info("Relevant documents found in the existing database")
+#     else:
+#         logger.info("No relevant documents found, searching for more documents")
+
+#         data_ingestion_result = requests.post(url=DATA_INGESTION_URL, json={"user_queries": additional_queries}, headers=request.headers)
+#         all_entries = data_ingestion_result.json()["all_entries"]
+
+#         logger.info(f"Total number of retrieved entries from data ingestion: {len(all_entries)}")
+        
+#         if len(all_entries) == 0:
+#             logger.info("No entries could be found for this query, please try to rephrase your query.")
+#         else:
+#             docs = retrieval_engine.convert_entries_to_docs(entries=all_entries)
+#             retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
+
+#         # Attempt to retrieve the documents again (should be successful this time)
+#         responses = retrieval_engine.retrieve(user_queries=additional_queries)
+#     return responses
 
 @app.post(
         ENDPOINT_URLS['retrieval']['path'], 
@@ -58,7 +86,7 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
 
         if additional_queries == "ERROR":
             return {"responses":"ERROR"}
-
+        
         # Attempt to retrieve documents the existing database
         logger.info("Attempting to retrieve documents from the existing database")
         responses = retrieval_engine.retrieve(user_queries=additional_queries)
@@ -87,6 +115,6 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
         return JSONResponse(content={"responses": responses}, status_code=status.HTTP_200_OK)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 if __name__ == "__main__":
     uvicorn.run("app_retrieval:app", host="localhost", port=8002, reload=True)

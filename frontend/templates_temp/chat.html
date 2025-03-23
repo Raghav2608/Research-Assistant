@@ -74,7 +74,7 @@
             let response = await fetch("/query", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_query: userQuery })
+                body: JSON.stringify({ user_query: userQuery, mode: "fast"}) // Use fast mode by default
             });
             let data = await response.json();
             chatBox.innerHTML += `<div><strong>Bot:</strong> ${data.answer.text}</div>`;

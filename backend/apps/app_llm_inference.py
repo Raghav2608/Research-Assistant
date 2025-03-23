@@ -47,6 +47,7 @@ async def llm_inference(request:Request,inference_request:LLMInferenceQuery=Body
                                                         retrieved_docs=responses, 
                                                         user_query=user_query
                                                         ) # Use original user query
+        logger.info(final_answer)
         return JSONResponse(content={"answer": final_answer}, status_code=status.HTTP_200_OK)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
