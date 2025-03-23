@@ -45,11 +45,11 @@ class QueryResponder:
         self.model = ChatOpenAI(
             model="gpt-4o-mini",  # Use the appropriate model
             api_key=openai_api_key,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            top_p=top_p,
-            frequency_penalty=frequency_penalty,
-            presence_penalty=presence_penalty,
+            self.temperature=temperature,
+            self.max_tokens=max_tokens,
+            self.top_p=top_p,
+            self.frequency_penalty=frequency_penalty,
+            self.presence_penalty=presence_penalty,
         )
         
         self.qa_chain = RunnableWithMessageHistory(
