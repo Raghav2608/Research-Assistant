@@ -281,29 +281,14 @@ def main():
         output_uri=True
     )
 
-    # Define hyperparameters
-    hyperparameters = {
-        "temperature": 0.7,
-        "max_tokens": 100,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0,
-    }
-    task.connect(hyperparameters)  # Connect hyperparameters to the task
+    task.execute_remotely(queue_name="default")
 
-    # Generate a unique session ID
-    session_id = "foo"  
-
-    # Initialize the QueryResponder with the current hyperparameters
-    query_responder = QueryResponder(
-        openai_api_key=openai_key,
-        session_id=session_id,
-        temperature=hyperparameters["temperature"],
-        max_tokens=hyperparameters["max_tokens"],
-        top_p=hyperparameters["top_p"],
-        frequency_penalty=hyperparameters["frequency_penalty"],
-        presence_penalty=hyperparameters["presence_penalty"],
-    )
+    # Define hyperparameters to loop through
+    hyperparameter_combinations = [
+        {"temperature": 0.7, "max_tokens": 100, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0},
+        {"temperature": 0.8, "max_tokens": 150, "top_p": 0.9, "frequency_penalty": 0.1, "presence_penalty": 0.1},
+        {"temperature": 0.9, "max_tokens": 200, "top_p": 0.8, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+    ]
 
     # Load the dataset
     from datasets import load_dataset
@@ -318,8 +303,26 @@ def main():
     if not paper:
         raise ValueError(f"Failed to fetch paper with ID: {paper_id}")
 
-    # Evaluate the dataset
-    evaluate_arxiv_qa(query_responder, dataset, paper)
+    # Loop through hyperparameter combinations
+    for hyperparameters in hyperparameter_combinations:
+        logger.info(f"Evaluating with hyperparameters: {hyperparameters}")
+
+        # Connect hyperparameters to the task
+        task.connect(hyperparameters)
+
+        # Initialize the QueryResponder with the current hyperparameters
+        query_responder = QueryResponder(
+            openai_api_key=openai_key,
+            session_id="foo",  # Use a unique session ID for each run
+            temperature=hyperparameters["temperature"],
+            max_tokens=hyperparameters["max_tokens"],
+            top_p=hyperparameters["top_p"],
+            frequency_penalty=hyperparameters["frequency_penalty"],
+            presence_penalty=hyperparameters["presence_penalty"],
+        )
+
+        # Evaluate the dataset
+        evaluate_arxiv_qa(query_responder, dataset, paper)
 
 if __name__ == "__main__":
     main()
