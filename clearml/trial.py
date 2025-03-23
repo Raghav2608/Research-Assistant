@@ -139,7 +139,7 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
     latencies = []
 
     logger.info("Generating answers for each QA pair...")
-   
+
     for i, sample in enumerate(dataset):
         # Ensure sample is a dictionary
         if not isinstance(sample, dict):
@@ -170,12 +170,12 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
         generated_answer = query_responder.generate_answer([document], question)
         latency = time.time() - start_time  # End latency measurement
         latencies.append(latency)
-       
+
         # Handle dict return types from generate_answer
         if isinstance(generated_answer, dict):
             generated_answer = generated_answer.get("text") or generated_answer.get("content", "")
         generated_answer = str(generated_answer)
-       
+
         logger.info(f"--- QA Pair {i+1} ---")
         logger.info(f"Question: {repr(question)}")
         logger.info(f"Reference Answer (len={len(reference_answer)}): {repr(reference_answer)}")
@@ -210,7 +210,7 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
             bleu_score_value = 0.0
             rouge_score_value = {"rouge1": 0.0, "rouge2": 0.0, "rougeL": 0.0}
             bert_score_value = 0.0
-           
+
         results.append({
             "question": question,
             "reference_answer": reference_answer,
@@ -259,7 +259,10 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
         for r in results:
             json.dump(r, f, ensure_ascii=False)
             f.write('\n')
-    Task.upload_artifact(name="Evaluation Results", artifact_object=results_file)
+
+    # Upload the artifact using the task instance
+    task = Task.current_task()
+    task.upload_artifact(name="Evaluation Results", artifact_object=results_file)
     logger.info(f"Evaluation complete! Results saved to {results_file}")
 
 def main():
