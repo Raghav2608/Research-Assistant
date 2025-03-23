@@ -9,6 +9,7 @@ from rouge_score import rouge_scorer
 from bert_score import score as bert_score
 import nltk
 
+from dotenv import load_dotenv
 from datasets import load_dataset
 from clearml import Task, Logger
 
@@ -275,13 +276,13 @@ def main():
         output_uri=True
     )
 
-    # Set the OPENAI_API_KEY as a parameter
-    task.set_parameter("OPENAI_API_KEY", "your_openai_api_key")
+    # Load environment variables from .env file
+    load_dotenv()
 
-    # Fetch the OPENAI_API_KEY from task parameters
-    openai_key = task.get_parameter("OPENAI_API_KEY")
+    # Retrieve the OpenAI API key from the environment
+    openai_key = os.getenv("OPENAI_API_KEY")
     if not openai_key:
-        raise ValueError("OPENAI_API_KEY not found in task parameters.")
+        raise ValueError("OPENAI_API_KEY not found in .env file.")
 
     # Set the OPENAI_API_KEY environment variable
     os.environ["OPENAI_API_KEY"] = openai_key
