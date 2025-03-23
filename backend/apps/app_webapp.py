@@ -64,6 +64,17 @@ async def login(request:Request) -> HTMLResponse:
     """
     return templates.TemplateResponse("login.html", {"request": request})
 
+@app.get(ENDPOINT_URLS['web_app']['additional_paths']['register'], response_class=HTMLResponse)
+async def register(request:Request) -> HTMLResponse:
+    """
+    Displays the registration page.
+
+    Args:
+        request (Request): The request object containing information
+                           that can be used/displayed in the template.
+    """
+    return templates.TemplateResponse("register.html", {"request": request})
+
 @app.get("/whoami", dependencies=[Depends(validate_request)])
 async def whoami(request: Request) -> JSONResponse:
     """
@@ -79,7 +90,11 @@ async def whoami(request: Request) -> JSONResponse:
     return JSONResponse(content={"username": username}, status_code=status.HTTP_200_OK)
 
 @app.post(ENDPOINT_URLS['web_app']['additional_paths']['user_authentication'], response_class=JSONResponse)
-async def user_authentication(request:Request, username:str=Body(...), password:str=Body(...)) -> JSONResponse:
+async def user_authentication(
+                            request:Request, 
+                            username:str=Body(...), 
+                            password:str=Body(...),
+                            ) -> JSONResponse:
     """
     Authenticates the user by checking the username and password provided.
     - If the user is authenticated, a token is generated and set in the cookie.

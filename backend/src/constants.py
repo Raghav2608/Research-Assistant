@@ -6,6 +6,7 @@ ENDPOINT_URLS = {
         "additional_paths": {
             "query": "/query",
             "login": "/login",
+            "register": "/register",
             "user_authentication": "/user_authentication",
         }
     },
