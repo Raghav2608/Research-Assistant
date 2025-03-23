@@ -9,7 +9,6 @@ def main():
         task_type=Task.TaskTypes.optimizer,
         reuse_last_task_id=False,
         output_uri=True,
-        requirements="requirements.txt"
     )
 
     # Debugging: Print base task hyperparameters
