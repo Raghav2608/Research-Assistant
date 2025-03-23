@@ -9,9 +9,9 @@ from rouge_score import rouge_scorer
 from bert_score import score as bert_score
 import nltk
 
-from dotenv import load_dotenv
 from datasets import load_dataset
 from clearml import Task, Logger
+from dotenv import load_dotenv
 
 # Adjust Python path to find your local modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
@@ -49,13 +49,6 @@ def fetch_paper(paper_id):
 def calculate_meteor_score(reference, hypothesis):
     """
     Calculate METEOR score between reference and hypothesis.
-    
-    Args:
-        reference: Reference text string.
-        hypothesis: Hypothesis text string.
-        
-    Returns:
-        METEOR score as a float.
     """
     if not reference or not hypothesis:
         logger.warning("Empty reference or hypothesis provided to METEOR calculation. Returning score 0.0")
@@ -73,13 +66,6 @@ def calculate_meteor_score(reference, hypothesis):
 def calculate_bleu_score(reference, hypothesis):
     """
     Calculate BLEU score between reference and hypothesis.
-    
-    Args:
-        reference: Reference text string.
-        hypothesis: Hypothesis text string.
-        
-    Returns:
-        BLEU score as a float.
     """
     if not reference or not hypothesis:
         logger.warning("Empty reference or hypothesis provided to BLEU calculation. Returning score 0.0")
@@ -94,13 +80,6 @@ def calculate_bleu_score(reference, hypothesis):
 def calculate_rouge_score(reference, hypothesis):
     """
     Calculate ROUGE score between reference and hypothesis.
-    
-    Args:
-        reference: Reference text string.
-        hypothesis: Hypothesis text string.
-        
-    Returns:
-        ROUGE score as a float.
     """
     if not reference or not hypothesis:
         logger.warning("Empty reference or hypothesis provided to ROUGE calculation. Returning score 0.0")
@@ -113,13 +92,6 @@ def calculate_rouge_score(reference, hypothesis):
 def calculate_bertscore(reference, hypothesis):
     """
     Calculate BERTScore between reference and hypothesis.
-    
-    Args:
-        reference: Reference text string.
-        hypothesis: Hypothesis text string.
-        
-    Returns:
-        BERTScore as a float.
     """
     if not reference or not hypothesis:
         logger.warning("Empty reference or hypothesis provided to BERTScore calculation. Returning score 0.0")
@@ -268,16 +240,18 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
 
 def main():
     # Initialize ClearML task
+  
     task = Task.init(
         project_name="Large Group Project",
         task_name="RAG Pipeline Arxiv QA Evaluation different metrics 2",
-        task_type=Task.TaskTypes.training,  # Set task type to training
+        task_type=Task.TaskTypes.training,
         reuse_last_task_id=False,
         output_uri=True
     )
 
-    # Load environment variables from .env file
-    load_dotenv()
+    # Load the .env file from the parent directory
+    env_file_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    load_dotenv(env_file_path)
 
     # Retrieve the OpenAI API key from the environment
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -286,6 +260,9 @@ def main():
 
     # Set the OPENAI_API_KEY environment variable
     os.environ["OPENAI_API_KEY"] = openai_key
+
+    # Upload the .env file as an artifact (optional, for remote execution)
+    task.upload_artifact(name="env_file", artifact_object=env_file_path)
 
     # Execute remotely
     task.execute_remotely(queue_name="default")
