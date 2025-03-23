@@ -266,12 +266,6 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
     logger.info(f"Evaluation complete! Results saved to {results_file}")
 
 def main():
-    from dotenv import load_dotenv
-    load_dotenv()
-    openai_key = os.getenv("OPENAI_API_KEY", None)
-    if not openai_key:
-        raise ValueError("OPENAI_API_KEY not found in environment.")
-
     # Initialize ClearML task
     task = Task.init(
         project_name="Large Group Project",
@@ -281,6 +275,18 @@ def main():
         output_uri=True
     )
 
+    # Set the OPENAI_API_KEY as a parameter
+    task.set_parameter("OPENAI_API_KEY", "your_openai_api_key")
+
+    # Fetch the OPENAI_API_KEY from task parameters
+    openai_key = task.get_parameter("OPENAI_API_KEY")
+    if not openai_key:
+        raise ValueError("OPENAI_API_KEY not found in task parameters.")
+
+    # Set the OPENAI_API_KEY environment variable
+    os.environ["OPENAI_API_KEY"] = openai_key
+
+    # Execute remotely
     task.execute_remotely(queue_name="default")
 
     # Define hyperparameters to loop through
