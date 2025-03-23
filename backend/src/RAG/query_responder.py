@@ -41,11 +41,11 @@ class QueryResponder:
             ("system", answer_prompt_template)
         ])
 
-        self.temperature=temperature,
-        self.max_tokens=max_tokens,
-        self.top_p=top_p,
-        self.frequency_penalty=frequency_penalty,
-        self.presence_penalty=presence_penalty,
+        self.temperature=temperature
+        self.max_tokens=max_tokens
+        self.top_p=top_p
+        self.frequency_penalty=frequency_penalty
+        self.presence_penalty=presence_penalty
         
         # Initialize the ChatOpenAI model with the given hyperparameters
         self.model = ChatOpenAI(
