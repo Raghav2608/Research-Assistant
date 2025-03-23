@@ -94,6 +94,7 @@ async def user_authentication(
                             request:Request, 
                             username:str=Body(...), 
                             password:str=Body(...),
+                            confirm_password:str=Body(None)
                             ) -> JSONResponse:
     """
     Authenticates the user by checking the username and password provided.
@@ -114,7 +115,13 @@ async def user_authentication(
     if is_rate_limited:
         return JSONResponse(content={"message": message}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
     
-    status_code, message = user_authentication_service.handle_authentication(username=username, password=password, request=request)
+    status_code, message = user_authentication_service.handle_authentication(
+                                                                            username=username, 
+                                                                            password=password, 
+                                                                            request=request, 
+                                                                            confirm_password=confirm_password,
+                                                                            )
+    
     if not (status_code == status.HTTP_200_OK or status_code == status.HTTP_201_CREATED):
         return JSONResponse(content={"message": message}, status_code=status_code)
     logger.info("Successfully authenticated user ...")
