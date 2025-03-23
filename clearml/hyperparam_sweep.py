@@ -8,7 +8,8 @@ def main():
         task_name="RAG Pipeline Hyperparameter Optimization 2",
         task_type=Task.TaskTypes.optimizer,
         reuse_last_task_id=False,
-        output_uri=True
+        output_uri=True,
+        requirements="requirements.txt"
     )
 
     # Debugging: Print base task hyperparameters
