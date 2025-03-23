@@ -40,16 +40,22 @@ class QueryResponder:
             MessagesPlaceholder(variable_name="history"),
             ("system", answer_prompt_template)
         ])
+
+        self.temperature=temperature,
+        self.max_tokens=max_tokens,
+        self.top_p=top_p,
+        self.frequency_penalty=frequency_penalty,
+        self.presence_penalty=presence_penalty,
         
         # Initialize the ChatOpenAI model with the given hyperparameters
         self.model = ChatOpenAI(
             model="gpt-4o-mini",  # Use the appropriate model
             api_key=openai_api_key,
-            self.temperature=temperature,
-            self.max_tokens=max_tokens,
-            self.top_p=top_p,
-            self.frequency_penalty=frequency_penalty,
-            self.presence_penalty=presence_penalty,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            top_p=self.top_p,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
         )
         
         self.qa_chain = RunnableWithMessageHistory(
