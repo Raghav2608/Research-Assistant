@@ -77,7 +77,7 @@
                 body: JSON.stringify({ user_query: userQuery, mode: "fast"}) // Use fast mode by default
             });
             let data = await response.json();
-            chatBox.innerHTML += `<div><strong>Bot:</strong> ${data.answer.text}</div>`;
+            chatBox.innerHTML += `<div><strong>Bot:</strong> ${data.answer}</div>`;
         }
     </script>
 </body>
