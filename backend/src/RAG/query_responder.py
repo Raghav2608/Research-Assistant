@@ -75,11 +75,9 @@ class QueryResponder:
             user_query (str): The user query.
         """
         if len(retrieved_docs) == 0:
-            answer = self.qa_chain.invoke({"context":"","question":user_query},config={"configurable":{"session_id":self.session_id}}).content
-            return answer
-
-
-        formatted_content = self.format_documents(retrieved_docs)
-        prompt = self.combine_context_and_question(formatted_content, user_query)
+            formatted_content = ""
+        else:
+            formatted_content = self.format_documents(retrieved_docs)
+        prompt = self.combine_context_and_question(context_text=formatted_content, user_query=user_query)
         answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":self.session_id}}).content
         return answer
