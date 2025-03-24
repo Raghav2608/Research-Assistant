@@ -10,6 +10,7 @@ export interface ChatboxProps {
 
 export default function Chatbox({ addMessage }: ChatboxProps) {
   const [chatInput, setChatInput] = useState<string>("");
+  const [mode, setMode] = useState<string>("fast");
   const queryurl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query`;
 
   async function send(): Promise<void> {
@@ -29,7 +30,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_query, mode:"fast"}),
+        body: JSON.stringify({ user_query, mode}),
       });
 
       if (res.ok) {
