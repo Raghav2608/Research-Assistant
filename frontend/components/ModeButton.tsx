@@ -8,16 +8,22 @@ interface ModeButtonProps {
 
 export default function ModeButton({ mode, setMode }: ModeButtonProps) {
   const toggleMode = () => {
-    const newMode = mode === "fast" ? "specific" : "fast";
-    setMode(newMode);
+    setMode(mode === "specific" ? "fast" : "specific");
   };
 
   return (
     <button
       onClick={toggleMode}
-      className="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary-dark transition-colors"
+      className={`px-4 h-3/4 rounded border transition-colors flex items-center justify-center
+        ${
+          mode === "specific"
+            ? "bg-primary text-white border-primary"
+            : "bg-transparent border-info text-info hover:bg-info/10"
+        }`}
     >
-      {mode === "fast" ? "Switch to Deep" : "Switch to Fast"}
+      <span className="font-bold text-lg">
+        {mode === "specific" ? "Deep Mode: ON" : "Deep Mode: OFF"}{" "}
+      </span>
     </button>
   );
 }
