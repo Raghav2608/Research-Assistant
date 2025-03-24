@@ -31,12 +31,16 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_query, mode}),
+        body: JSON.stringify({ user_query, mode }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        addMessage({ message: data.answer, sender: Sender.Bot });
+        addMessage({
+          message: data.answer,
+          sender: Sender.Bot,
+          papers: data.papers,
+        });
       } else {
         addMessage({
           message: "Sorry! I am unable to respond to this query",
