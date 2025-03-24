@@ -179,7 +179,7 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
             logger.info("Successfully called the system.")
             llm_response = llm_response.json()["answer"]
         
-        return {"answer": llm_response}
+        return {"answer": llm_response,"papers":responses}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
