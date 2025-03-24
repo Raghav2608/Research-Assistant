@@ -29,7 +29,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_query }),
+        body: JSON.stringify({ user_query, mode:"fast"}),
       });
 
       if (res.ok) {
