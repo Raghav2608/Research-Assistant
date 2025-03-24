@@ -20,7 +20,7 @@ export default function LoginForm() {
         }
       })
       .catch((error) => console.error("Error checking auth status:", error));
-  }, [router]);
+  }, [router, backendUrl]);
 
   const handleLogin = async (
     e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLInputElement>

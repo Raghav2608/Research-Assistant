@@ -7,11 +7,7 @@ export interface SendButtonProps {
   send: () => void;
 }
 
-export default function SendButton({
-  chatInput,
-  setChatInput,
-  send,
-}: SendButtonProps) {
+export default function SendButton({ send }: SendButtonProps) {
   return (
     <button
       onClick={send}

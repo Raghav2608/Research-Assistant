@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
+import { ChangeEvent, useState, KeyboardEvent } from "react";
 import SendButton from "./SendButton";
 import Message, { Sender } from "@/types/Message";
 import ModeButton from "./ModeButton";
