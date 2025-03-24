@@ -25,8 +25,8 @@ RUN cd frontend && npm install
 # Make the start script executable
 RUN chmod +x start-prod.sh
 
-# Expose the ports used by your services
-EXPOSE 8000 8001 8002 8003 3000
+# Expose the ports used by the frontend
+EXPOSE 3000
 
 
 # Start the processes using the start script
