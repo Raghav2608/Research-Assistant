@@ -4,15 +4,17 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from backend.src.RAG.memory import get_by_session_id
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
+from langchain_mongodb import MongoDBChatMessageHistory
+from dotenv import load_dotenv
+from .memory import Memory
+load_dotenv()
 class QueryResponder:
     """
     Class that responds to a user query by combining the context and user query and
     passing it to an LLM model for a context-aware response.    
     """
     def __init__(self, openai_api_key:str,session_id:str):
-        os.environ["USER_AGENT"] = "myagent" # Always set a user agent
-        
+        self.memory = Memory()
         self.session_id  = session_id
         
         answer_prompt_template = """
@@ -24,7 +26,10 @@ class QueryResponder:
         The user has asked the following question:
         {question}
 
+        Make atleast 10 bullet points with ten different papers if there are less than 10 papers then use all 
+
         If you find no context then just answer general user queries. if the user query is information specific ask for context
+
         """
         query_template = ChatPromptTemplate([
             MessagesPlaceholder(variable_name="history"),
@@ -37,7 +42,7 @@ class QueryResponder:
         
         self.qa_chain = RunnableWithMessageHistory(
             chain,
-            get_by_session_id,
+            self.memory.get_session_query_responder,
             input_messages_key="question",
             history_messages_key="history"
             )

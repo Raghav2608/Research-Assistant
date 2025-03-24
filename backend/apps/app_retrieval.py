@@ -14,7 +14,7 @@ from backend.src.RAG.query_generator import ResearchQueryGenerator
 from backend.src.RAG.utils import clean_search_query
 from backend.src.backend.pydantic_models import ResearchPaperQuery
 from backend.src.constants import ENDPOINT_URLS
-from backend.src.backend.user_authentication.utils import validate_request
+from backend.src.backend.user_authentication.utils import validate_request,verify_token
 
 load_dotenv()
 
@@ -114,6 +114,15 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
     try:
         logger.info("Successfully called retrieval pipeline endpoint")
 
+        payload = verify_token(request)
+        username = payload.get("user_id")
+        if not username:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User ID not found in token."
+            )
+        
+        query_generator.session_id = username
         user_input = query_request.user_query
         mode = query_request.mode
         
@@ -124,6 +133,7 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
         print(additional_queries)
 
         if additional_queries == "ERROR":
+            print("ERROR")
             return {"responses":"ERROR"}
         
         if mode == "fast":

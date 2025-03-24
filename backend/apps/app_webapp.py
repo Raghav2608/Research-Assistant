@@ -160,6 +160,7 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
                                             headers=headers
                                             )
         responses = retrieval_response.json()["responses"]
+        logger.info(responses)
         LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
         
         if responses == "ERROR":
