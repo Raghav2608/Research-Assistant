@@ -8,6 +8,7 @@ import Message from "@/types/Message";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
   // On mount, check if user is already authenticated
@@ -32,8 +33,8 @@ export default function Home() {
   }
   return (
     <div className="flex flex-col-reverse items-center w-full">
-      <Chatbox addMessage={addMessage} />
-      <Chatlog messages={messages} />
+      <Chatbox addMessage={addMessage} setIsLoading={setIsLoading}/>
+      <Chatlog messages={messages} isLoading={isLoading}/>
     </div>
   );
 }

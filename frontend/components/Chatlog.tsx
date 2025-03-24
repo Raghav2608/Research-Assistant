@@ -6,6 +6,7 @@ import PapersDisplay from "./PapersDisplay";
 
 export interface ChatlogProps {
   messages: Message[];
+  isLoading: boolean;
 }
 
 const WELCOME_TEXT =
