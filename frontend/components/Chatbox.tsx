@@ -3,6 +3,7 @@
 import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
 import SendButton from "./SendButton";
 import Message, { Sender } from "@/types/Message";
+import ModeButton from "./ModeButton";
 
 export interface ChatboxProps {
   addMessage: (msg: Message) => void;
@@ -10,6 +11,7 @@ export interface ChatboxProps {
 
 export default function Chatbox({ addMessage }: ChatboxProps) {
   const [chatInput, setChatInput] = useState<string>("");
+  const [mode, setMode] = useState<string>("fast");
   const queryurl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query`;
 
   async function send(): Promise<void> {
@@ -29,7 +31,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ user_query, mode:"fast"}),
+        body: JSON.stringify({ user_query, mode}),
       });
 
       if (res.ok) {
@@ -54,7 +56,8 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
   }
 
   return (
-    <div className="sticky bottom-10 pb-2 bg-light w-full flex flex-row justify-center gap-0">
+    <div className="sticky bottom-10 pb-2 bg-light w-full flex flex-row justify-center items-center gap-0">
+      <ModeButton mode={mode} setMode={setMode} />
       <input
         placeholder="Type your query here..."
         type="text"
@@ -63,7 +66,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
           setChatInput(e.target.value);
         }}
         onKeyDown={handleEnter}
-        className="w-3/5 px-10 py-5 border border-light rounded-full bg-lightest text-white text-3xl placeholder-white placeholder-opacity-50 placeholder- focus:outline-none focus:ring-2 focus:ring-primary"
+        className="w-3/5 ml-5 px-10 py-5 border border-light rounded-full bg-lightest text-white text-3xl placeholder-white placeholder-opacity-50 placeholder- focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <SendButton
         chatInput={chatInput}
