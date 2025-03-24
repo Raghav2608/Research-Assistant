@@ -10,7 +10,6 @@ from backend.src.constants import ENDPOINT_URLS
 from backend.src.RAG.query_responder import QueryResponder
 from backend.src.backend.user_authentication.utils import validate_request,verify_token
 from dotenv import load_dotenv
-import httpx
 import traceback
 
 app = FastAPI()
