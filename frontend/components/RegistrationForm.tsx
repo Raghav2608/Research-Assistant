@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export default  function RegisterForm() {
+export default function RegisterForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -10,52 +10,61 @@ export default  function RegisterForm() {
   // On mount, check if user is already authenticated
   useEffect(() => {
     const whoamiurl = `${backendUrl}/whoami`;
-    // Call the /whoami endpoint which will return the user info if authenticated
     fetch(whoamiurl, {
       method: "GET",
-      credentials: "include", // Send cookies
+      credentials: "include",
     })
       .then((res) => {
         if (res.ok) {
-          // If authenticated, redirect to home page
           router.push("/");
         }
       })
       .catch((error) => console.error("Error checking auth status:", error));
-  }, [router]);
+  }, [router, backendUrl]);
 
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (
+    e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLInputElement>
+  ) => {
     e.preventDefault();
     console.log("Registering:", { username, password });
 
-    // Ensure that your backend URL is set in your environment as NEXT_PUBLIC_BACKEND_URL
     if (!backendUrl) {
       console.error("Backend URL is not defined in environment variables");
       return;
     }
 
-    const loginUrl = `${backendUrl}/user_authentication`;
+    const registerUrl = `${backendUrl}/user_authentication`;
 
     try {
-      const res = await fetch(loginUrl, {
+      const res = await fetch(registerUrl, {
         method: "POST",
-        credentials: "include", // Ensure cookies are sent/received
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password, confirm_password:password}),
+        body: JSON.stringify({
+          username,
+          password,
+          confirm_password: password,
+        }),
       });
 
       if (res.ok) {
-        // Successfully authenticated, redirect to home
         router.push("/");
       } else {
         const data = await res.json();
-        console.error("Login error:", data.message);
-        alert("Login failed: " + data.message);
+        console.error("Register error:", data.message);
+        alert("Register failed: " + data.message);
       }
     } catch (error) {
-      console.error("Error logging in:", error);
+      console.error("Error during registration:", error);
+    }
+  };
+
+  // onKeyDown handler to trigger registration on Enter
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleRegister(e);
     }
   };
 
@@ -73,6 +82,7 @@ export default  function RegisterForm() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full py-3 px-4 border bg-light rounded mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-white"
           required
         />
@@ -81,6 +91,7 @@ export default  function RegisterForm() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="w-full py-3 px-4 border bg-light rounded mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-primary"
           required
         />
