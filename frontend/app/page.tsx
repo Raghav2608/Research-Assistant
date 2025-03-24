@@ -25,7 +25,7 @@ export default function Home() {
         }
       })
       .catch((error) => console.error("Error checking auth status:", error));
-  }, [router]);
+  }, [router, backendUrl]);
 
   function addMessage(msg: Message): void {
     setMessages((prevMessages) => [...prevMessages, msg]);
