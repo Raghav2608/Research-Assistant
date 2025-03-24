@@ -23,7 +23,7 @@ export default function RootLayout({
         <main className="flex flex-row flex-1 w-full bg-light pb-10">{children}</main>
         <footer className="fixed bottom-0 left-0 flex items-center justify-center w-full bg-dark h-10">
           <div>
-            <span className="text-info">Devloped by group 4 for LGP</span>
+            <span className="text-info">Developed by group 4 for LGP</span>
           </div>
         </footer>
       </body>
