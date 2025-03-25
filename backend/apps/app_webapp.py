@@ -170,6 +170,7 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
             logger.info("Successfully called the system.")
             llm_response = llm_response.json()["answer"]
             logger.info(llm_response)
+            return {"answer": llm_response,"papers":[]}
         
         else:
             logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
@@ -178,8 +179,9 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
             llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses},headers=headers)
             logger.info("Successfully called the system.")
             llm_response = llm_response.json()["answer"]
+            return {"answer": llm_response,"papers":responses}
         
-        return {"answer": llm_response,"papers":responses}
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

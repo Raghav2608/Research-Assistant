@@ -41,6 +41,8 @@ class ResearchQueryGenerator:
         2. If the query is **ambiguous** (e.g., "bias"), provide different possible meanings.
         3. If the query is **too narrow**, generalize it slightly while keeping it relevant.
         4. If the query is **invalid** (too short, gibberish), return: `"I don't understand. ERROR: Invalid query. Please provide more details."`
+        5. If the query is telling you to find "any research" or 'cool research" or anything vague use your creativity to generate search query
+        6. use history only when relevant to the current question otherwise don't
 
         """
         

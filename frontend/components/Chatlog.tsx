@@ -6,11 +6,12 @@ import PapersDisplay from "./PapersDisplay";
 
 export interface ChatlogProps {
   messages: Message[];
+  isLoading: boolean;
 }
 
 const WELCOME_TEXT =
   'Hi there I\'m your personal research assitant. Please ask me anything about academic research. For example "What are the latest updates in the transformer model world?". In return I will provide a summary of what I found alongside the sources I used.';
-export default function Chatlog({ messages }: ChatlogProps) {
+export default function Chatlog({ messages, isLoading }: ChatlogProps) {
   useEffect(() => {
     // Scroll to bottom when messages change
     window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
@@ -29,6 +30,10 @@ export default function Chatlog({ messages }: ChatlogProps) {
           </div>
         );
       })}
+      {isLoading
+        ? <MessageBubble
+        msg={{ message: "Answering your question...", sender: Sender.Bot }}/>
+        : ""}
     </div>
   );
 }

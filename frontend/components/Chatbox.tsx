@@ -1,15 +1,22 @@
 "use client";
 
-import { ChangeEvent, useState, KeyboardEvent, Key } from "react";
+import {
+  ChangeEvent,
+  useState,
+  KeyboardEvent,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import SendButton from "./SendButton";
 import Message, { Sender } from "@/types/Message";
 import ModeButton from "./ModeButton";
 
 export interface ChatboxProps {
   addMessage: (msg: Message) => void;
+  setIsLoading: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function Chatbox({ addMessage }: ChatboxProps) {
+export default function Chatbox({ addMessage, setIsLoading }: ChatboxProps) {
   const [chatInput, setChatInput] = useState<string>("");
   const [mode, setMode] = useState<string>("fast");
   const queryurl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/query`;
@@ -25,6 +32,7 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
 
     // Get a response from the API
     try {
+      setIsLoading(true);
       const res = await fetch(queryurl, {
         method: "POST",
         credentials: "include", // Ensure cookies are sent/received
@@ -47,8 +55,10 @@ export default function Chatbox({ addMessage }: ChatboxProps) {
           sender: Sender.Bot,
         });
       }
+      setIsLoading(false);
     } catch (error) {
       console.error("Error processing the request", error);
+      setIsLoading(false);
     }
   }
 
