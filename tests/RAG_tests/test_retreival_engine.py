@@ -111,3 +111,38 @@ def test_retrieval_after_multiple_document_additions(mock_retrieval_engine):
     assert len(retrieved_docs) == 2, "Expected 2 retrieved documents but found a different count"
     assert retrieved_docs[0]["metadata"]["title"] == "DL Paper", "Retrieved incorrect first document"
     assert retrieved_docs[1]["metadata"]["title"] == "NN Paper", "Retrieved incorrect second document"
+
+def test_convert_entries_to_docs(mock_retrieval_engine):
+    """Test the convert_entries_to_docs function to ensure correct document creation from entries."""
+    
+    # Sample entry dictionary
+    entries = [
+        {
+            "title": "AI Paper 1",
+            "summary": "This is a summary of AI Paper 1",
+            "published": "2023-01-01",
+            "paper_link": "https://ai1.com"
+        },
+        {
+            "title": "ML Paper 2",
+            "summary": "This is a summary of ML Paper 2",
+            "published": "2023-02-01",
+            "pdf_link": "https://ml2.com"
+        }
+    ]
+    
+    # Call the convert_entries_to_docs function
+    docs = mock_retrieval_engine.convert_entries_to_docs(entries)
+    
+    # Assertions to ensure documents are created properly
+    assert len(docs) == 2, f"Expected 2 documents, but found {len(docs)}"
+    
+    # Check the metadata of the first document
+    assert docs[0].metadata["title"] == "AI Paper 1", "Title mismatch"
+    assert docs[0].metadata["link"] == "https://ai1.com", "Link mismatch"
+    assert docs[0].page_content == "This is a summary of AI Paper 1", "Summary mismatch"
+    
+    # Check the metadata of the second document
+    assert docs[1].metadata["title"] == "ML Paper 2", "Title mismatch"
+    assert docs[1].metadata["link"] == "https://ml2.com", "Link mismatch"
+    assert docs[1].page_content == "This is a summary of ML Paper 2", "Summary mismatch"
