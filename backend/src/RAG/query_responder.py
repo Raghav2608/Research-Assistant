@@ -23,13 +23,17 @@ class QueryResponder:
         Use the format [Source: link] (link will be given to you with every paper right after word source).
         Below are relevant excepts from academic papers:
         {context}
+        
         The user has asked the following question:
         {question}
 
-        Make atleast 10 bullet points with ten different papers if there are less than 10 papers then use all 
+        make as many points as necessary and make sure the answer is in numbered boullet points and ensure you conver as many papers 
+        as possible 
 
-        If you find no context then just answer general user queries. if the user query is information specific ask for context
-
+        if the question is not clear ask questions to understand it better
+        
+        if the query is not information related then just politely answer. if it is information related use context to answer
+        only use history when necessary and relevant to query otherwise dont. 
         """
         query_template = ChatPromptTemplate([
             MessagesPlaceholder(variable_name="history"),

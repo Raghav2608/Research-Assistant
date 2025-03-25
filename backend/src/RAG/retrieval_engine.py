@@ -72,6 +72,15 @@ class RetrievalEngine:
             docs.append(doc)
         return docs
     
+    def document_exists(self,link):
+        """Check if a document with the same link exists in ChromaDB."""
+        print(f"link : {link}")
+        search_results = self.vector_store.similarity_search("", k=1, filter={"link": link})
+        print(search_results)
+        print(bool(search_results))  # Filter by link
+        return bool(search_results)  # If a document with the same link exists, return True
+
+
     def split_and_add_documents(self, docs:List[Document]) -> None:
         """
         Splits the documents into chunks and adds the chunks to the ChromaDB.
@@ -79,10 +88,20 @@ class RetrievalEngine:
         Args:
             docs (List[Document]): A list of documents to split and add to the ChromaDB.
         """
-        all_splits = self.text_splitter.split_documents(docs)
+        
+        unique_docs = []
+        print(docs)
+        for doc in docs:
+            if not self.document_exists(doc.metadata["link"]):
+                unique_docs.append(doc)
+        
+        if len(unique_docs) == 0:
+            return
+        
+        all_splits = self.text_splitter.split_documents(unique_docs)
 
         # Index chunks into Chroma
-        self.vector_store.add_documents(all_splits)
+        self.vector_store.add_documents(documents=all_splits)
 
         # Update the vector retriever
         self.initiate_vector_retriever() 
