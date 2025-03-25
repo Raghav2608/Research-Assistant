@@ -65,7 +65,7 @@ class DataPipeline:
             if entry["title"] not in known_titles:
                 known_titles.add(entry["title"])
                 unique_entries.append(entry)
-        return entries
+        return unique_entries
 
     def select_entries(
                         self, 
