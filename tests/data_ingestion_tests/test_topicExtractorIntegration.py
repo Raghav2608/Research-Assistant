@@ -24,7 +24,7 @@ def test_topic_extractor_integration():
     start_time = time.time()
     result = extractor.get_result(sentence)
     elapsed_time = time.time() - start_time
-    # Since the model output can vary, we check that the result is a non-empty string.
+    # Since the model output can vary check that the result is a non-empty string.
     assert isinstance(result, str)
     assert result.strip() != ""
     assert elapsed_time < 30, f"get_result took too long: {elapsed_time} seconds"
@@ -56,5 +56,5 @@ def test_topic_extractor_edge_conditions():
     assert isinstance(results, list)
     assert len(results) == len(edge_sentences)
     for res in results:
-        # The extractor should handle edge cases gracefully (returning a string, possibly empty).
+        # The extractor should handle edge cases.
         assert isinstance(res, str)

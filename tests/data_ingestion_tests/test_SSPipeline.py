@@ -24,7 +24,7 @@ dummy_semantic_json = {
     "data": [
         {
             "paperId": "1",
-            "title": "The Bee Movie Analysis",  # Updated title to match dummy_entries
+            "title": "The Bee Movie Analysis",
             "abstract": "Do you like jazz?",
             "authors": [{"name": "Quentin Tarantino"}],
             "year": 2020,

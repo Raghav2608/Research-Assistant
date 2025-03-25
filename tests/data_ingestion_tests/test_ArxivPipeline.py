@@ -30,7 +30,6 @@ def test_fetch_entries_success(monkeypatch):
     # Fake function to simulate fetching XML from arXiv.
     def fake_fetch_arxiv_papers(search_query, start, max_results):
         # Verify that the search query is correctly constructed.
-        # For example, if topic is "machine learning", search_query should be "all:machine learning".
         assert search_query == "all:machine learning"
         assert start == 0
         assert max_results == 4
@@ -43,7 +42,6 @@ def test_fetch_entries_success(monkeypatch):
         return dummy_entries
     
     # Patch the functions in the pipeline module where they are used.
-    # We patch them on the module where ArXivDataIngestionPipeline imported them.
     from backend.src.data_ingestion.arxiv import arxiv_pipeline as pipeline_module
     monkeypatch.setattr(pipeline_module, "fetch_arxiv_papers", fake_fetch_arxiv_papers)
     monkeypatch.setattr(pipeline_module, "parse_papers", fake_parse_papers)

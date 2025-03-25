@@ -43,10 +43,10 @@ def dummy_topic_extractor(monkeypatch):
     # Override the model with a dummy object.
     class DummyModel:
         def generate(self, input_ids, max_length, num_beams, early_stopping):
-            # Return a list with a dummy output (as bytes).
+            # Return a list with a dummy output.
             return [b"dummy_output"]
     
-    # Replace the real tokenizer and model with our dummy ones.
+    # Replace the real tokenizer and model with dummy ones.
     extractor.tokenizer = DummyTokenizer()
     extractor.model = DummyModel()
     

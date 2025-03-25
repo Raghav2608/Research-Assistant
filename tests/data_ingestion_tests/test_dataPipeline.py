@@ -86,10 +86,7 @@ def test_process_query(mock_data_pipeline):
         # Expect remove_newlines to be called at least twice.
         assert mock_data_pipeline.text_preprocessor.remove_newlines.call_count >= 2
         mock_data_pipeline.text_preprocessor.remove_stopwords.assert_called_once()
-        # Because the final call in process_query is:
-        #   processed_query = clean_search_query(processed_query)
-        # and the last remove_newlines returns "mocked_newlines_removed",
-        # we expect clean_search_query to be called with "mocked_newlines_removed".
+       
         mock_clean.assert_called_once_with("mocked_newlines_removed")
         assert result == "cleaned_query"
 
@@ -134,8 +131,8 @@ def test_select_entries(mock_data_pipeline, monkeypatch):
     """
     # Setup sample data for two user queries.
     all_arxiv_entries = [
-        [{"title": "Arxiv A1"}, {"title": "Arxiv A2"}],  # For query index 0
-        [{"title": "Arxiv B1"}],                           # For query index 1
+        [{"title": "Arxiv A1"}, {"title": "Arxiv A2"}], 
+        [{"title": "Arxiv B1"}],
     ]
     all_ss_entries = [
         [{"title": "SS A1"}, {"title": "SS A2"}],

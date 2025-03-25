@@ -33,13 +33,13 @@ def test_fetch_arxiv_papers_integration():
     This test calls the real arXiv API using a common search query ("all:deep+learning")
     and verifies that the returned XML contains a <feed> element.
     """
-    search_query = "all:deep+learning"  # '+' instead of space
+    search_query = "all:deep+learning"
     offset = 0
     max_results = 5
     result = fetch_arxiv_papers(search_query, offset, max_results)
     
     assert isinstance(result, str)
-    assert "<feed" in result  # More flexible than checking for exact start
+    assert "<feed" in result
 
 @pytest.mark.integration
 def test_fetch_and_extract_pdf_content_integration():
