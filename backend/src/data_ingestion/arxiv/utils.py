@@ -65,12 +65,15 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
     Args:
         papers_string (str): The XML string from the arXiv API.
     """
-    result = xmltodict.parse(papers_string)
     entries = []
     try:
-        for entry in result["feed"]["entry"]:
-            print(entry) 
-
+        result = xmltodict.parse(papers_string)
+        raw_entries = result["feed"]["entry"] 
+        #If there is only one entry, wrap it in a list
+        if isinstance(raw_entries, dict):
+            raw_entries = [raw_entries]
+        for entry in raw_entries:
+            print(entry)
             if not isinstance(entry, dict):
                 print("Skipping invalid entry")
                 continue
@@ -93,6 +96,7 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
                 "pdf_link": entry["id"]
             }
             entries.append(paper_data)
-    except:
-        pass
+    except Exception as e:
+        #On an error (i.e. malformed xml), now returns an empty list
+        return []
     return entries
