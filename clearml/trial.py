@@ -100,7 +100,7 @@ def calculate_bertscore(reference, hypothesis):
     P, R, F1 = bert_score([hypothesis], [reference], lang="en")
     return F1.mean().item()
 
-def evaluate_arxiv_qa(query_responder, dataset, paper):
+def evaluate_arxiv_qa(query_responder, dataset, paper, iteration):
     """
     Evaluates the QueryResponder on the dataset and logs metrics.
     """
@@ -208,13 +208,15 @@ def evaluate_arxiv_qa(query_responder, dataset, paper):
 
     # Log metrics to ClearML
     logger.info("Logging metrics to ClearML...")
-    Logger.current_logger().report_scalar("METEOR", "Average", avg_meteor, iteration=1)
-    Logger.current_logger().report_scalar("BLEU", "Average", avg_bleu, iteration=1)
-    Logger.current_logger().report_scalar("ROUGE-1", "Average", avg_rouge1, iteration=1)
-    Logger.current_logger().report_scalar("ROUGE-2", "Average", avg_rouge2, iteration=1)
-    Logger.current_logger().report_scalar("ROUGE-L", "Average", avg_rougeL, iteration=1)
-    Logger.current_logger().report_scalar("BERTScore", "Average", avg_bert, iteration=1)
-    Logger.current_logger().report_scalar("Latency", "Average", avg_latency, iteration=1)
+   # Log metrics to ClearML with specific iteration
+    Logger.current_logger().report_scalar("METEOR", "Average", avg_meteor, iteration=iteration)
+    Logger.current_logger().report_scalar("BLEU", "Average", avg_bleu, iteration=iteration)
+    Logger.current_logger().report_scalar("ROUGE-1", "Average", avg_rouge1, iteration=iteration)
+    Logger.current_logger().report_scalar("ROUGE-2", "Average", avg_rouge2, iteration=iteration)
+    Logger.current_logger().report_scalar("ROUGE-L", "Average", avg_rougeL, iteration=iteration)
+    Logger.current_logger().report_scalar("BERTScore", "Average", avg_bert, iteration=iteration)
+    Logger.current_logger().report_scalar("Latency", "Average", avg_latency, iteration=iteration)
+
 
     # Print average scores
     print("\nAverage Scores:")
@@ -265,14 +267,20 @@ def main():
     task.upload_artifact(name="env_file", artifact_object=env_file_path)
 
     # Execute remotely
-    task.execute_remotely(queue_name="default")
+    #task.execute_remotely(queue_name="default")
 
     # Define hyperparameters to loop through
     hyperparameter_combinations = [
-        {"temperature": 0.7, "max_tokens": 100, "top_p": 1.0, "frequency_penalty": 0.0, "presence_penalty": 0.0},
-        {"temperature": 0.8, "max_tokens": 150, "top_p": 0.9, "frequency_penalty": 0.1, "presence_penalty": 0.1},
         {"temperature": 0.9, "max_tokens": 200, "top_p": 0.8, "frequency_penalty": 0.2, "presence_penalty": 0.2},
-    ]
+        {"temperature": 0.7, "max_tokens": 200, "top_p": 0.8, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.9, "max_tokens": 150, "top_p": 0.9, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.7, "max_tokens": 150, "top_p": 0.9, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.9, "max_tokens": 200, "top_p": 0.9, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.7, "max_tokens": 200, "top_p": 0.9, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.9, "max_tokens": 150, "top_p": 0.8, "frequency_penalty": 0.2, "presence_penalty": 0.2},
+        {"temperature": 0.7, "max_tokens": 150, "top_p": 0.8, "frequency_penalty": 0.1, "presence_penalty": 0.1},
+        
+         ]
 
     # Load the dataset
     from datasets import load_dataset
@@ -287,15 +295,17 @@ def main():
     if not paper:
         raise ValueError(f"Failed to fetch paper with ID: {paper_id}")
 
-    # Loop through hyperparameter combinations
-    for hyperparameters in hyperparameter_combinations:
+
+        # Loop through hyperparameter combinations with index
+    for idx, hyperparameters in enumerate(hyperparameter_combinations):
         logger.info(f"Evaluating with hyperparameters: {hyperparameters}")
 
         # Connect hyperparameters to the task
         task.connect(hyperparameters)
 
-        # Initialize the QueryResponder with the current hyperparameters
+        # Initialize the QueryResponder
         query_responder = QueryResponder(
+      
             openai_api_key=openai_key,
             session_id="foo",  # Use a unique session ID for each run
             temperature=hyperparameters["temperature"],
@@ -303,10 +313,14 @@ def main():
             top_p=hyperparameters["top_p"],
             frequency_penalty=hyperparameters["frequency_penalty"],
             presence_penalty=hyperparameters["presence_penalty"],
+          
         )
 
-        # Evaluate the dataset
-        evaluate_arxiv_qa(query_responder, dataset, paper)
+        # Evaluate with current iteration number
+        evaluate_arxiv_qa(query_responder, dataset, paper, iteration=idx+1)
+
+        # Add a small delay to ensure ClearML logging completes
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()

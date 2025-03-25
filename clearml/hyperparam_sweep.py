@@ -36,7 +36,7 @@ def main():
     )
 
     # Enqueue the hyperparameter sweep task for remote execution
-    task.execute_remotely(queue_name="default")
+    #task.execute_remotely(queue_name="default")
 
     # Start optimization
     an_optimizer.start()
