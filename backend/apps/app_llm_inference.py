@@ -66,4 +66,4 @@ async def llm_inference(request:Request,inference_request:LLMInferenceQuery=Body
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
-    uvicorn.run("app_llm_inference:app", host="localhost", port=8003, reload=True)
+    uvicorn.run("app_llm_inference:app", host="0.0.0.0", port=8003, reload=True)
