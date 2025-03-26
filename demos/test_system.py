@@ -1,3 +1,11 @@
+"""
+Script for testing the entire system by sending requests to the backend services.
+- The script sends requests to the web app, data ingestion, retrieval, and LLM inference services 
+  with unauthenticated and authenticated requests.
+- The unauthenticated requests should always result in an error response.
+- The authenticated requests should return the expected responses, assuming the token is valid.
+"""
+import set_path
 import requests
 import time
 
