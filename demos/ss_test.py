@@ -1,9 +1,13 @@
+"""
+Script to test the Semantic Scholar data ingestion pipeline.
+"""
 
+import set_path
 import os
 
 from dotenv import load_dotenv
 from backend.src.data_ingestion.semantic_scholar.ss_pipeline import SSDataIngestionPipeline
-from backend.src.data_ingestion.semantic_scholar.utils_ss import fetch_all_semantic_scholar_papers, parse_semantic_scholar_papers
+
 
 def main():
     # Load environment variables from the .env file
@@ -15,7 +19,6 @@ def main():
     # search_query = "Are+there+are+any+recent+advancements+in+transformer+models" # Doesn't work
     # search_query = "Are there are any recent advancements in transformer models" # Doesn't work
     search_query = "recent+advancements+in+transformer+models" # Works
-    limit = 50         # Page size: number of papers to fetch per API call
     max_results = 100  # Total maximum number of papers to fetch via pagination
     desired_total = 20 # Final number of papers to process (e.g., 10 open access and 10 popular)
 

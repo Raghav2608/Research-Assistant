@@ -1,3 +1,7 @@
+"""
+Script for testing the data ingestion pipeline with research query generation.
+"""
+import set_path
 import os
 
 from backend.src.data_ingestion.data_pipeline import DataPipeline
