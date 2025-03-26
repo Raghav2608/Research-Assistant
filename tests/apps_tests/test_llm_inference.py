@@ -3,12 +3,15 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.apps.app_llm_inference import app 
 from unittest.mock import patch
+from dotenv import load_dotenv
 
 # Set up test client
 client = TestClient(app)
 # Mock environment variable for testing
 os.environ["OPENAI_API_KEY"] = "test_api_key"
-token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidGVzdCIsImV4cCI6MTc0Mjk3MTMyMn0.qKVjaEmtdbs-H8iZ9-HO4ZgtIfdsMrNFbeBmWOKKMsk"
+load_dotenv()
+
+token = os.getenv('TEST_TOKEN')
 
 def test_llm_inference_success():
     """Test successful LLM inference request"""
