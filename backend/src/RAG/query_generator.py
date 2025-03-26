@@ -4,18 +4,21 @@ from langchain_openai import ChatOpenAI
 from typing import List
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from backend.src.RAG.utils import clean_search_query
-from .memory import get_by_session_id
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_mongodb import MongoDBChatMessageHistory
+import os
+from dotenv import load_dotenv
+from .memory import Memory
 
+
+load_dotenv()
 class ResearchQueryGenerator:
     """
     A class to generate multiple variations of a research query while handling edge cases.
     """
     def __init__(self, openai_api_key:str,session_id:str):
-        
+        self.memory = Memory()
         self.session_id = session_id
-
-
         self.system_prompt_template = """
         
         You are a research assistant specializing in refining user queries for recent research retrieval or retrieval based on given papers.
@@ -38,6 +41,8 @@ class ResearchQueryGenerator:
         2. If the query is **ambiguous** (e.g., "bias"), provide different possible meanings.
         3. If the query is **too narrow**, generalize it slightly while keeping it relevant.
         4. If the query is **invalid** (too short, gibberish), return: `"I don't understand. ERROR: Invalid query. Please provide more details."`
+        5. If the query is telling you to find "any research" or 'cool research" or anything vague use your creativity to generate search query
+        6. use history only when relevant to the current question otherwise don't
 
         """
         
@@ -52,20 +57,11 @@ class ResearchQueryGenerator:
         chain = query_template | ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
         
         self.query_chain = RunnableWithMessageHistory(
-            chain,
-            get_by_session_id,
+            runnable=chain,
+            get_session_history=self.memory.get_session_query_generator,
             input_messages_key="question",
             history_messages_key="history"
             )
-
-    def embed_query_in_prompt(self, query:str) -> str:
-        """
-        Embeds the query using the LLM model.
-        
-        Args:
-            query (str): The query to embed.
-        """
-        return self.system_prompt_template.format(query=query)
 
     def generate(self, user_prompt:str) -> List[str]:
         """

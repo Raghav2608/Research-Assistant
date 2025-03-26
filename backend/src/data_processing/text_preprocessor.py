@@ -88,8 +88,8 @@ class TextPreprocessor:
             text (str): The text to apply the operation to.
         """
         all_words = wordninja.split(text)
-        print(all_words)
-        print(len(all_words))
+        # print(all_words)
+        # print(len(all_words))
         return " ".join(all_words)
     
     def remove_repeated_words_and_adjacent_numbers(self, text:str) -> str:
@@ -161,13 +161,13 @@ class TextPreprocessor:
             num_repeats += 1
             if text == prev:
                 break
-        print("NR", num_repeats)
-        print("Text before contextual filtering:\n", len(text), "!!!", text)
+        # print("NR", num_repeats)
+        # print("Text before contextual filtering:\n", len(text), "!!!", text)
         
         # Apply a single run of contextual filtering.
         text = self.contextual_filter(text)
         for operation in self.operations:
             text = operation(text)
-            print("Text:\n", text)
+            # print("Text:\n", text)
             text = self.remove_newlines(text)
         return text

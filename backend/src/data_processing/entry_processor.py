@@ -99,4 +99,5 @@ class EntryProcessor:
         if "content" in entry:
             entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
+        entry["title"] = self.text_preprocessor.remove_newlines(entry["title"]).strip()
         return entry

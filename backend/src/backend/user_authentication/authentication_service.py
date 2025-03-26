@@ -2,6 +2,8 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from fastapi import status
 
+from typing import Union
+
 from backend.src.backend.user_authentication.rate_limiter import RateLimiter
 from backend.src.backend.user_authentication.token_manager import TokenManager
 from backend.src.backend.user_authentication.authenticator import UserAuthenticator
@@ -29,13 +31,14 @@ class UserAuthenticationService:
         self.user_authenticator = UserAuthenticator(is_testing)
         self.token_manager = TokenManager()
     
-    def _handle_signup(self, username:str, password:str):
+    def _handle_signup(self, username:str, password:str, confirm_password:str) -> tuple:
         """
         Handles the signup process for the user.
 
         Args:
             username (str): The username of the user.
-            password (str): The password of the user
+            password (str): The password of the user.
+            confirm_password (str): The confirmed password of the user (should match the password).
         """
         is_strong_password = self.user_authenticator.check_password_strength(password)
         if not is_strong_password:
@@ -46,6 +49,10 @@ class UserAuthenticationService:
                     )
             return status.HTTP_400_BAD_REQUEST, message
         
+        if password != confirm_password:
+            message = "Passwords do not match. Please try again."
+            return status.HTTP_400_BAD_REQUEST, message
+
         self.user_authenticator.create_user(username=username, password=password)
         return status.HTTP_201_CREATED, "User created successfully."
     
@@ -92,7 +99,7 @@ class UserAuthenticationService:
         
         return False, None
     
-    def handle_authentication(self, username:str, password:str, request:Request):
+    def handle_authentication(self, username:str, password:str, confirm_password:Union[str, None], request:Request):
         """
         Handles the authentication process for the user.
 
@@ -106,15 +113,29 @@ class UserAuthenticationService:
         ip_address = request.client.host
         ip_identifier = f"ip:{ip_address}"
 
-        if not is_existing_user:
-            status_code, message = self._handle_signup(username=username, password=password)
-        else:
-            status_code, message = self._handle_login(
+        if confirm_password is None: # Login when confirm_password is not provided
+            if is_existing_user:
+                status_code, message = self._handle_login(
                                                     username=username,
-                                                    password=password, 
+                                                    password=password,
                                                     ip_identifier=ip_identifier, 
                                                     user_identifier=user_identifier
                                                     )
+            else:
+                status_code = status.HTTP_401_UNAUTHORIZED
+                message = "User does not exist. Please sign up first."
+
+        elif confirm_password is not None: # Sign up when confirm_password is provided
+            if is_existing_user:
+                status_code = status.HTTP_400_BAD_REQUEST
+                message = "User already exists. Cannot create a new user with the same username."
+            else:
+                status_code, message = self._handle_signup(
+                                                            username=username, 
+                                                            password=password, 
+                                                            confirm_password=confirm_password
+                                                            )
+        
         if status_code == status.HTTP_200_OK or status_code == status.HTTP_201_CREATED:
             self.rate_limiter.clear_attempts(identifier=user_identifier)
             self.rate_limiter.clear_attempts(identifier=ip_identifier)
@@ -149,7 +170,7 @@ class UserAuthenticationService:
                         value=token,
                         httponly=True, # Prevents JavaScript from accessing the cookie
                         secure=True, # Ensures that the cookie is only sent over HTTPS
-                        samesite="strict", # Ensures that the cookie is only sent to the same site that set it
+                        samesite="none",
                         max_age=duration #  Set the cookie to expire after a certain duration
                         )
         return response

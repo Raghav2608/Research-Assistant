@@ -20,9 +20,9 @@ if __name__ == "__main__":
         raise EnvironmentError("openai key not set in environment.")
 
     data_pipeline = DataPipeline()
-    query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY,session_id="foo")
+    query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY,session_id="bar")
     retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
-    query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY,session_id="foo")
+    query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY,session_id="bar")
 
     while True:
         user_input = input("User: ")
@@ -32,7 +32,6 @@ if __name__ == "__main__":
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        print(additional_queries)
 
         if additional_queries == "ERROR":
             final_answer = query_responder.generate_answer(retrieved_docs=[], user_query=user_input)

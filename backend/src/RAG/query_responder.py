@@ -4,26 +4,18 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from backend.src.RAG.memory import get_by_session_id
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-
-
-        
+from langchain_mongodb import MongoDBChatMessageHistory
+from dotenv import load_dotenv
+from .memory import Memory
+load_dotenv()
 class QueryResponder:
-    def __init__(self, openai_api_key: str, session_id: str, temperature: float = 0.7, max_tokens: int = 100, top_p: float = 1.0, frequency_penalty: float = 0.0, presence_penalty: float = 0.0):
-        """
-        Initialize the QueryResponder with the given hyperparameters.
-        
-        Args:
-            openai_api_key (str): The OpenAI API key.
-            session_id (str): A unique session ID for tracking.
-            temperature (float): Sampling temperature for the model.
-            max_tokens (int): Maximum number of tokens to generate.
-            top_p (float): Nucleus sampling parameter.
-            frequency_penalty (float): Penalty for frequent tokens.
-            presence_penalty (float): Penalty for new tokens.
-        """
-        os.environ["USER_AGENT"] = "myagent"  # Always set a user agent
-        
-        self.session_id = session_id
+    """
+    Class that responds to a user query by combining the context and user query and
+    passing it to an LLM model for a context-aware response.    
+    """
+    def __init__(self, openai_api_key:str,session_id:str):
+        self.memory = Memory()
+        self.session_id  = session_id
         
         answer_prompt_template = """
         You are a helpful research assistant. 
@@ -31,10 +23,16 @@ class QueryResponder:
         Use the format [Source: link] (link will be given to you with every paper right after word source).
         Below are relevant excepts from academic papers:
         {context}
+        
         The user has asked the following question:
         {question}
 
-        If you find no context then just answer general user queries. if the user query is information specific ask for context
+        make as many points as necessary and make sure the answer is in numbered boullet points and ensure you conver as many papers 
+        as possible 
+
+        if the question is not clear ask questions to understand it better
+        If there is not context available DO NOT PROVIDE ANY LINKS OR INFORMATION and do not answer any questions UNLESSits a general question like
+        hi, hello, my name is Raghav etc.
         """
         query_template = ChatPromptTemplate([
             MessagesPlaceholder(variable_name="history"),
@@ -59,8 +57,8 @@ class QueryResponder:
         )
         
         self.qa_chain = RunnableWithMessageHistory(
-            query_template | self.model,
-            get_by_session_id,
+            chain,
+            self.memory.get_session_query_responder,
             input_messages_key="question",
             history_messages_key="history"
         )
@@ -101,3 +99,20 @@ class QueryResponder:
         """
         return {"context": context_text, "question": user_query}
     
+    def generate_answer(self, retrieved_docs:List[str], user_query:str) -> str:
+        """
+        Generates an answer based on the retrieved documents and user query by
+        prompting the LLM model.
+
+        Args:
+            retrieved_docs (List[str]): A list of retrieved documents.
+            user_query (str): The user query.
+        """
+        if len(retrieved_docs) == 0:
+            formatted_content = ""
+        else:
+            formatted_content = self.format_documents(retrieved_docs)
+        prompt = self.combine_context_and_question(context_text=formatted_content, user_query=user_query)
+        answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":self.session_id}}).content
+        return answer
+

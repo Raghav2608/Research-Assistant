@@ -25,9 +25,9 @@ class Chunker:
             text (str): The text to convert into tokens.
         """
         tokens = self.tokenizer(text, return_tensors="pt")
-        print(tokens.keys())
-        print(len(tokens["input_ids"]), len(tokens["token_type_ids"]), len(tokens["attention_mask"]))
-        print(len(tokens), len(tokens["input_ids"][0]), len(tokens["token_type_ids"][0]), len(tokens["attention_mask"][0]))
+        # print(tokens.keys())
+        # print(len(tokens["input_ids"]), len(tokens["token_type_ids"]), len(tokens["attention_mask"]))
+        # print(len(tokens), len(tokens["input_ids"][0]), len(tokens["token_type_ids"][0]), len(tokens["attention_mask"][0]))
         return tokens
     
     def get_chunks(self, text:str, return_as_text:bool=False, stride:int=512) -> Union[List[str], List[torch.Tensor]]:
