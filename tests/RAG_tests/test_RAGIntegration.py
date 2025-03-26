@@ -31,6 +31,7 @@ def setup_rag_system():
     
     return query_gen, retriever, responder
 
+@pytest.mark.integration
 def test_rag_good_prompt_pipeline(setup_rag_system):
     """Integration test for the full RAG pipeline."""
     query_gen, retriever, responder = setup_rag_system
@@ -92,6 +93,7 @@ def test_rag_good_prompt_pipeline(setup_rag_system):
 
     print("Integration Test Passed ✅")
 
+@pytest.mark.integration
 def test_rag_bad_prompt_pipeline(setup_rag_system):
     query_gen, retriever, responder = setup_rag_system
 
