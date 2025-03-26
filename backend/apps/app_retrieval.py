@@ -147,7 +147,7 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
         logger.info(f"Responses: {responses}")
         return JSONResponse(content={"responses": responses}, status_code=status.HTTP_200_OK)
     except Exception as e:
-        logger.error(f"Error in llm_inference: {traceback.format_exc()}") 
+        logger.error(f"Error in retrieval: {traceback.format_exc()}") 
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
