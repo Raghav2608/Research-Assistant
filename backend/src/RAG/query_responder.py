@@ -31,9 +31,8 @@ class QueryResponder:
         as possible 
 
         if the question is not clear ask questions to understand it better
-        
-        if the query is not information related then just politely answer. if it is information related use context to answer
-        only use history when necessary and relevant to query otherwise dont. 
+        If there is not context available DO NOT PROVIDE ANY LINKS OR INFORMATION and do not answer any questions UNLESSits a general question like
+        hi, hello, my name is Raghav etc.
         """
         query_template = ChatPromptTemplate([
             MessagesPlaceholder(variable_name="history"),
