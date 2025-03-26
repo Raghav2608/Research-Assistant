@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from fastapi import Request, status
 from backend.src.backend.user_authentication.authentication_service import UserAuthenticationService
 
@@ -41,6 +41,19 @@ def test_successful_signup(auth_service, mock_request):
     assert status_code == status.HTTP_201_CREATED
     assert message == "User created successfully."
     auth_service.user_authenticator.create_user.assert_called_once()
+
+def test_existing_user_signup(auth_service, mock_request):
+    with patch.object(auth_service.user_authenticator, "user_exists", return_value=True):
+    
+        status_code, message = auth_service.handle_authentication(
+            username="testuser",
+            password="SecurePass123!",
+            confirm_password="SecurePass123!",
+            request=mock_request
+        )
+        
+        assert status_code == 400
+        assert message == "User already exists. Cannot create a new user with the same username."
 
 def test_signup_weak_password(auth_service, mock_request):
     """Test signup with a weak password."""
