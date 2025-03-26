@@ -3,7 +3,6 @@ import urllib.request
 import xmltodict
 import requests
 import pdfplumber
-
 from io import BytesIO
 from typing import List, Dict, Any
 
@@ -16,7 +15,9 @@ def fetch_arxiv_papers(search_query:str, start:int, max_results:int) -> str:
         start (int): The index of the first result to return.
         max_results (int): The maximum number of results to return.
     """
+
     url = f'http://export.arxiv.org/api/query?search_query={search_query}&start={start}&max_results={max_results}&sortBy=relevance&sortOrder=descending'
+
     data = urllib.request.urlopen(url)
     result = data.read().decode("utf-8")
     return result
@@ -64,16 +65,6 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
 
     Args:
         papers_string (str): The XML string from the arXiv API.
-    """
-    entries = []
-    try:
-        result = xmltodict.parse(papers_string)
-        raw_entries = result["feed"]["entry"] 
-        #If there is only one entry, wrap it in a list
-        if isinstance(raw_entries, dict):
-            raw_entries = [raw_entries]
-        for entry in raw_entries:
-            print(entry)
             if not isinstance(entry, dict):
                 print("Skipping invalid entry")
                 continue
@@ -100,3 +91,4 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
         #On an error (i.e. malformed xml), now returns an empty list
         return []
     return entries
+

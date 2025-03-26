@@ -37,18 +37,44 @@ class QueryResponder:
         query_template = ChatPromptTemplate([
             MessagesPlaceholder(variable_name="history"),
             ("system", answer_prompt_template)
-            # Equivalently:
-            # MessagesPlaceholder(variable_name="conversation", optional=True)
         ])
+
+        self.temperature=temperature
+        self.max_tokens=max_tokens
+        self.top_p=top_p
+        self.frequency_penalty=frequency_penalty
+        self.presence_penalty=presence_penalty
         
-        chain = query_template | ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
+        # Initialize the ChatOpenAI model with the given hyperparameters
+        self.model = ChatOpenAI(
+            model="gpt-4o-mini",  # Use the appropriate model
+            api_key=openai_api_key,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            top_p=self.top_p,
+            frequency_penalty=self.frequency_penalty,
+            presence_penalty=self.presence_penalty,
+        )
         
         self.qa_chain = RunnableWithMessageHistory(
             chain,
             self.memory.get_session_query_responder,
             input_messages_key="question",
             history_messages_key="history"
-            )
+        )
+
+    def generate_answer(self, retrieved_docs: List[str], user_query: str) -> str:
+        """
+        Generates an answer based on the retrieved documents and user query.
+        """
+        if len(retrieved_docs) == 0:
+            answer = self.qa_chain.invoke({"context": "", "question": user_query}, config={"configurable": {"session_id": self.session_id}}).content
+            return answer
+
+        formatted_content = self.format_documents(retrieved_docs)
+        prompt = self.combine_context_and_question(formatted_content, user_query)
+        answer = self.qa_chain.invoke(prompt, config={"configurable": {"session_id": self.session_id}}).content
+        return answer
 
     def format_documents(self, retrieved_docs:List[str]) -> str:
         """
@@ -89,3 +115,4 @@ class QueryResponder:
         prompt = self.combine_context_and_question(context_text=formatted_content, user_query=user_query)
         answer = self.qa_chain.invoke(prompt,config={"configurable":{"session_id":self.session_id}}).content
         return answer
+
