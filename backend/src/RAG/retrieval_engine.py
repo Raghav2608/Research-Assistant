@@ -30,8 +30,8 @@ class RetrievalEngine:
         if not os.path.exists(PERSIST_DIR):
             os.makedirs(PERSIST_DIR)
         
-        self.vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
-        
+        self.vector_store = Chroma(collection_name="production_collection",persist_directory=PERSIST_DIR, embedding_function=embeddings)
+    
         self.SEARCH_K = 5 # Number of documents to return
         self.FETCH_K = self.SEARCH_K * 3 # Number of documents to fetch
         self.initiate_vector_retriever()
