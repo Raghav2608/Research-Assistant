@@ -170,7 +170,7 @@ class UserAuthenticationService:
                         value=token,
                         httponly=True, # Prevents JavaScript from accessing the cookie
                         secure=True, # Ensures that the cookie is only sent over HTTPS
-                        samesite="strict", # Ensures that the cookie is only sent to the same site that set it
+                        samesite="none",
                         max_age=duration #  Set the cookie to expire after a certain duration
                         )
         return response
