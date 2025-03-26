@@ -20,9 +20,9 @@ if __name__ == "__main__":
         raise EnvironmentError("openai key not set in environment.")
 
     data_pipeline = DataPipeline()
-    query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY)
+    query_generator = ResearchQueryGenerator(openai_api_key=OPENAI_API_KEY,session_id="bar")
     retrieval_engine = RetrievalEngine(openai_api_key=OPENAI_API_KEY)
-    query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY)
+    query_responder = QueryResponder(openai_api_key=OPENAI_API_KEY,session_id="bar")
 
     while True:
         user_input = input("User: ")
@@ -32,36 +32,28 @@ if __name__ == "__main__":
 
         # Generate additional queries
         additional_queries = query_generator.generate(user_input)
-        additional_queries.append(user_input)
-        print(additional_queries)
 
-        # Attempt to retrieve documents the existing database
-        responses = retrieval_engine.retrieve(user_queries=additional_queries)
+        if additional_queries == "ERROR":
+            final_answer = query_responder.generate_answer(retrieved_docs=[], user_query=user_input)
 
-        # Attempt to retrieve documents via data ingestion
-        if not responses:
+            # Attempt to retrieve documents via data ingestionexit
+
+        else:
             print("No relevant documents found, searching for more documents")
+            entries = data_pipeline.run(additional_queries)
+            print("Total number of retrieved entries from data ingestion: ", len(entries))
 
-            all_entries = []
-            for query in additional_queries:
-                print(query)
-                entries = data_pipeline.run(query)
-                all_entries.extend(entries)
-            print("Total number of retrieved entries from data ingestion: ", len(all_entries))
-
-            if len(all_entries) == 0:
+            if len(entries) == 0:
                 print("No entries could be found for this query, please try to rephrase your query.")
             else:
-                docs = retrieval_engine.convert_entries_to_docs(entries=all_entries)
+                docs = retrieval_engine.convert_entries_to_docs(entries=entries)
                 retrieval_engine.split_and_add_documents(docs=docs) # Add documents to ChromaDB (save)
 
             # Attempt to retrieve the documents again
             responses = retrieval_engine.retrieve(user_queries=additional_queries)
-
-        print("Responses:", responses)
-
-        # Pass to LLM
-        final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input) # Use original user query
+            print("Responses:", responses)
+            # Pass to LLM
+            final_answer = query_responder.generate_answer(retrieved_docs=responses, user_query=user_input) # Use original user query
 
         print("=== Final Answer ===")
         print("Researcher: ", final_answer)

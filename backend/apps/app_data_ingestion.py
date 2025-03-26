@@ -43,4 +43,4 @@ async def data_ingestion(query_request:DataIngestionQuery=Body(...)) -> JSONResp
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
-    uvicorn.run("app_data_ingestion:app", host="localhost", port=8001, reload=True)
+    uvicorn.run("app_data_ingestion:app", host="0.0.0.0", port=8001, reload=True)

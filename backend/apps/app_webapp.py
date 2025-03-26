@@ -1,6 +1,7 @@
 import uvicorn
 import requests
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException, Body, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -12,6 +13,7 @@ from backend.src.constants import ENDPOINT_URLS
 from backend.src.backend.user_authentication.utils import validate_request
 from backend.src.backend.user_authentication.authentication_service import UserAuthenticationService
 from backend.src.backend.user_authentication.token_manager import verify_token
+from dotenv import load_dotenv
 
 app = FastAPI(title="Research Assistant API")
 logger = logging.getLogger('uvicorn.error')
@@ -22,7 +24,7 @@ user_authentication_service = UserAuthenticationService(is_testing=True)
 
 
 # Add CORS middleware to allow requests from the frontend (localhost)
-origins = [
+origins = [ os.environ.get("FRONTEND_URL"),
             "http://localhost:3000",
             "http://localhost:8080",
             "http://127.0.0.1",
@@ -64,6 +66,17 @@ async def login(request:Request) -> HTMLResponse:
     """
     return templates.TemplateResponse("login.html", {"request": request})
 
+@app.get(ENDPOINT_URLS['web_app']['additional_paths']['register'], response_class=HTMLResponse)
+async def register(request:Request) -> HTMLResponse:
+    """
+    Displays the registration page.
+
+    Args:
+        request (Request): The request object containing information
+                           that can be used/displayed in the template.
+    """
+    return templates.TemplateResponse("register.html", {"request": request})
+
 @app.get("/whoami", dependencies=[Depends(validate_request)])
 async def whoami(request: Request) -> JSONResponse:
     """
@@ -79,7 +92,12 @@ async def whoami(request: Request) -> JSONResponse:
     return JSONResponse(content={"username": username}, status_code=status.HTTP_200_OK)
 
 @app.post(ENDPOINT_URLS['web_app']['additional_paths']['user_authentication'], response_class=JSONResponse)
-async def user_authentication(request:Request, username:str=Body(...), password:str=Body(...)) -> JSONResponse:
+async def user_authentication(
+                            request:Request, 
+                            username:str=Body(...), 
+                            password:str=Body(...),
+                            confirm_password:str=Body(None)
+                            ) -> JSONResponse:
     """
     Authenticates the user by checking the username and password provided.
     - If the user is authenticated, a token is generated and set in the cookie.
@@ -99,7 +117,13 @@ async def user_authentication(request:Request, username:str=Body(...), password:
     if is_rate_limited:
         return JSONResponse(content={"message": message}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
     
-    status_code, message = user_authentication_service.handle_authentication(username=username, password=password, request=request)
+    status_code, message = user_authentication_service.handle_authentication(
+                                                                            username=username, 
+                                                                            password=password, 
+                                                                            request=request, 
+                                                                            confirm_password=confirm_password,
+                                                                            )
+    
     if not (status_code == status.HTTP_200_OK or status_code == status.HTTP_201_CREATED):
         return JSONResponse(content={"message": message}, status_code=status_code)
     logger.info("Successfully authenticated user ...")
@@ -134,27 +158,34 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
         RETRIEVAL_URL = f"http://{ENDPOINT_URLS['retrieval']['base_url']}{ENDPOINT_URLS['retrieval']['path']}"
         retrieval_response = requests.post(
                                             url=RETRIEVAL_URL, 
-                                            json={"user_query": query_request.user_query}, 
+                                            json={"user_query": query_request.user_query, "mode": query_request.mode}, 
                                             headers=headers
                                             )
         responses = retrieval_response.json()["responses"]
-        logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
-
-        logger.info("Calling LLM inference endpoint")
+        logger.info(responses)
         LLM_INFERENCE_URL = f"http://{ENDPOINT_URLS['llm_inference']['base_url']}{ENDPOINT_URLS['llm_inference']['path']}"
-        llm_response = requests.post(
-                                    url=LLM_INFERENCE_URL, 
-                                    json={
-                                        "user_query": query_request.user_query, 
-                                        "responses": responses
-                                        },
-                                    headers=headers
-                                    )
-        logger.info("Successfully called the system.")
-        llm_response = llm_response.json()["answer"]
-        return JSONResponse(content={"answer": llm_response}, status_code=status.HTTP_200_OK)
+        
+        if responses == "ERROR":
+            logger.info("received unqueriable user response answering generally")
+            logger.info("Calling LLM inference endpoint")
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses":[]},headers=headers)
+            logger.info("Successfully called the system.")
+            llm_response = llm_response.json()["answer"]
+            logger.info(llm_response)
+            return {"answer": llm_response,"papers":[]}
+        
+        else:
+            logger.info(f"Successfully called the retrieval endpoint. Received {len(responses)} responses.")
+            logger.info("Calling LLM inference endpoint")
+            
+            llm_response = requests.post(url=LLM_INFERENCE_URL, json={"user_query": query_request.user_query, "responses": responses},headers=headers)
+            logger.info("Successfully called the system.")
+            llm_response = llm_response.json()["answer"]
+            return {"answer": llm_response,"papers":responses}
+        
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
-    uvicorn.run("app_webapp:app", host="localhost", port=8000, reload=True)
+    uvicorn.run("app_webapp:app", host="0.0.0.0", port=8000, reload=True)

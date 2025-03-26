@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class ResearchPaperQuery(BaseModel):
     user_query: str # E.g., "Are there any recent advancements in transformer models?"
+    mode: str # i.e., "fast" or "specific"
 
 class DataIngestionQuery(BaseModel):
     user_queries: list[str] # E.g., "Are there any recent advancements in transformer models?"

@@ -3,7 +3,6 @@ import urllib.request
 import xmltodict
 import requests
 import pdfplumber
-
 from io import BytesIO
 from typing import List, Dict, Any
 
@@ -16,7 +15,9 @@ def fetch_arxiv_papers(search_query:str, start:int, max_results:int) -> str:
         start (int): The index of the first result to return.
         max_results (int): The maximum number of results to return.
     """
+
     url = f'http://export.arxiv.org/api/query?search_query={search_query}&start={start}&max_results={max_results}&sortBy=relevance&sortOrder=descending'
+
     data = urllib.request.urlopen(url)
     result = data.read().decode("utf-8")
     return result
@@ -64,13 +65,6 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
 
     Args:
         papers_string (str): The XML string from the arXiv API.
-    """
-    result = xmltodict.parse(papers_string)
-    entries = []
-    try:
-        for entry in result["feed"]["entry"]:
-            print(entry) 
-
             if not isinstance(entry, dict):
                 print("Skipping invalid entry")
                 continue
@@ -84,30 +78,17 @@ def parse_papers(papers_string: str) -> List[Dict[str, Any]]:
             if isinstance(entry["author"], dict):
                 entry["author"] = [entry["author"]]
 
-            # Fetch content safely
-            content = ""
-            if pdf_link:
-                try:
-                    content = fetch_and_extract_pdf_content(pdf_link)
-                    if not content.strip():  # If PDF has no text, fallback to summary
-                        print(f"Warning: No extractable text found in PDF for '{entry['title']}'. Using summary instead.")
-                        content = entry["summary"]
-                except Exception as e:
-                    print(f"Error fetching PDF for '{entry['title']}': {e}. Using summary instead.")
-                    content = entry["summary"]
-            else:
-                print(f"Warning: No PDF found for '{entry['title']}'. Using summary instead.")
-                content = entry["summary"]
-
             paper_data = {
                 "id": entry["id"],
                 "title": entry["title"],
                 "summary": entry["summary"].strip(),
                 "authors": [author["name"] for author in entry["author"]],
                 "published": entry["published"],
-                "pdf_link": pdf_link if pdf_link else "No PDF available"
+                "pdf_link": entry["id"]
             }
             entries.append(paper_data)
-    except:
-        pass
+    except Exception as e:
+        #On an error (i.e. malformed xml), now returns an empty list
+        return []
     return entries
+

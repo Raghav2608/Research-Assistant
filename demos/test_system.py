@@ -2,7 +2,6 @@ import requests
 import time
 
 from backend.src.constants import ENDPOINT_URLS
-from backend.src.RAG.utils import clean_search_query
 from backend.src.backend.user_authentication.token_manager import TokenManager
 
 def construct_endpoint(service:str, additional_path:str=None) -> str:
@@ -44,7 +43,7 @@ if __name__ == "__main__":
     user_query = "Are there any recent advancements in transformer models?"
     test_endpoint(ENDPOINTS["web_app"], {"user_query": user_query})
     test_endpoint(ENDPOINTS["retrieval"], {"user_query": user_query})
-    test_endpoint(ENDPOINTS["data_ingestion"], {"user_queries": [clean_search_query(user_query)]})
+    test_endpoint(ENDPOINTS["data_ingestion"], {"user_queries": [user_query]})
     test_endpoint(ENDPOINTS["llm_inference"], {"user_query": user_query, "responses": []})
 
     # Test with authenticated requests 
@@ -54,5 +53,5 @@ if __name__ == "__main__":
 
     test_endpoint(ENDPOINTS["web_app"], {"user_query": user_query}, headers=headers)
     test_endpoint(ENDPOINTS["retrieval"], {"user_query": user_query}, headers=headers)
-    test_endpoint(ENDPOINTS["data_ingestion"], {"user_queries": [clean_search_query(user_query)]}, headers=headers)
+    test_endpoint(ENDPOINTS["data_ingestion"], {"user_queries": [user_query]}, headers=headers)
     test_endpoint(ENDPOINTS["llm_inference"], {"user_query": user_query, "responses": []}, headers=headers)

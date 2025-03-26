@@ -17,8 +17,10 @@ class EntryProcessor:
         "summary": str,
         "authors": List[str],
         "published": str,
-        "pdf_link": str,
-        "content": str
+        "paper_link": str,
+        "content": str (optional),
+        "citationCount": int,
+        "influentialCitationCount": int
     }
 
     For example:
@@ -28,8 +30,10 @@ class EntryProcessor:
         "summary": "This paper presents a new method for...",
         "authors": ["Alice", "Bob"],
         "published": "2021-01-01",
-        "pdf_link": "https://arxiv.org/pdf/1234.56789.pdf",
-        "content": "This paper presents a new method for..."
+        "pdf_link": "https://www.semanticscholar.org/paper/1234.56789",
+        "content": ""
+        "citationCount": 100,
+        "influentialCitationCount": 20
     }
     """
     def __init__(self):
@@ -40,10 +44,10 @@ class EntryProcessor:
                                     "summary": str,
                                     "authors": list,
                                     "published": str,
-                                    "pdf_link": str,
+                                    "paper_link": str,
                                     "content": str
                                     }
-        self.acceptable_missing_keys = ["authors", "published", "pdf_link", "content"]
+        self.acceptable_missing_keys = ["authors", "published", "paper_link", "content"]
     
     def validate_entry(self, entry:Dict[str, Any]) -> None:
         """
@@ -80,7 +84,7 @@ class EntryProcessor:
         paper_string += f"Summary: {entry['summary']}\n"
         paper_string += f"Authors: {', '.join(entry['authors'])}\n"
         paper_string += f"Published: {entry['published']}\n"
-        paper_string += f"PDF Link: {entry['pdf_link']}\n"
+        paper_string += f"Semantic Scholar Link: {entry['paper_link']}\n"
         paper_string += f"Content: {entry['content']}\n"
         return paper_string
     
@@ -95,4 +99,5 @@ class EntryProcessor:
         if "content" in entry:
             entry["content"] = self.text_preprocessor(entry["content"])
         entry["summary"] = self.text_preprocessor(entry["summary"])
+        entry["title"] = self.text_preprocessor.remove_newlines(entry["title"]).strip()
         return entry

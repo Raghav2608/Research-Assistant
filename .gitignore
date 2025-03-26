@@ -1,4 +1,5 @@
 .venv
+.coverage
 lgap
 __pycache__
 .env

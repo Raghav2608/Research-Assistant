@@ -1,4 +1,4 @@
-from backend.src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers
+from src.data_ingestion.arxiv.utils import fetch_arxiv_papers, parse_papers
 from typing import Dict, Any, List
 
 class ArXivDataIngestionPipeline:

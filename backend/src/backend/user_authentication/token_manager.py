@@ -27,7 +27,7 @@ class TokenManager:
         Args:
             user_id (str): The user ID for which the token is to be generated.
         """
-        expiration_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=self.token_duration)
+        expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=self.token_duration)
         payload = {
                 "user_id": user_id, 
                 "exp": expiration_time # Automatically checked with JWT.decode

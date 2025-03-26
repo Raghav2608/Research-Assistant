@@ -1,7 +1,10 @@
 from typing import List, Dict, Any
-
 from backend.src.data_processing.pipeline import DataProcessingPipeline
-from backend.src.data_ingestion.arxiv.pipeline import ArXivDataIngestionPipeline
+from backend.src.data_ingestion.semantic_scholar.ss_pipeline import SSDataIngestionPipeline
+from backend.src.data_ingestion.arxiv.arxiv_pipeline import ArXivDataIngestionPipeline
+from backend.src.RAG.utils import clean_search_query
+
+import numpy as np
 
 class DataPipeline:
     """
@@ -9,7 +12,7 @@ class DataPipeline:
     This class is responsible for fetching and processing data from various sources.
     """
 
-    def __init__(self, max_total_entries:int=10, min_entries_per_query:int=3):
+    def __init__(self, max_total_entries:int=25, min_entries_per_query:int=3):
         """
         Initialises the data pipeline with the specified parameters.
 
@@ -19,13 +22,123 @@ class DataPipeline:
         """
         self.data_processing_pipeline = DataProcessingPipeline()
 
-        # ADD DATA INGESTION PIPELINES HERE:
         self.arxiv_data_ingestion_pipeline = ArXivDataIngestionPipeline()
-        #########################################
-        #########################################
-        #########################################
+        self.ss_data_ingestion_pipeline = SSDataIngestionPipeline()
+
+        self.text_preprocessor = self.data_processing_pipeline.entry_processor.text_preprocessor
+
         self.max_total_entries = max_total_entries
         self.min_entries_per_query = min_entries_per_query
+
+    def process_query(self, user_query:str) -> str:
+        """
+        Processes the user query by removing non-alphanumeric characters, stopwords
+        and formats the query to be used for fetching data.
+
+        Args:
+            user_query (str): The user query to process.
+        """
+        processed_query = self.text_preprocessor.keep_only_alphanumeric(user_query)
+        processed_query = self.text_preprocessor.remove_newlines(processed_query)
+        print(processed_query)
+
+        processed_query = self.text_preprocessor.remove_stopwords(processed_query)
+        processed_query = self.text_preprocessor.remove_newlines(processed_query)
+        print(processed_query)
+        
+        processed_query = clean_search_query(processed_query)
+        print(processed_query)
+        return processed_query
+    
+    def remove_duplicate_entries(self, entries:List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Removes duplicate entries from the list of entries fetched by
+        comparing the titles of the entries.
+
+        Args:
+            entries (List[Dict[str, Any]]): The list of entries to remove duplicates from.
+        """
+        known_titles = set()
+        unique_entries = []
+
+        for entry in entries:
+            if entry["title"] not in known_titles:
+                known_titles.add(entry["title"])
+                unique_entries.append(entry)
+        return unique_entries
+
+    def select_entries(
+                        self, 
+                        all_arxiv_entries:List[List[Dict[str, Any]]], 
+                        all_ss_entries:List[List[Dict[str, Any]]], 
+                        num_user_queries
+                        ) -> List[Dict[str, Any]]:
+        """
+        Selects entries from the fetched entries for each user query from all of the data sources.
+        
+        For each entry for the final list:
+        - Choose whether to use the ArXiv or Semantic Scholar entries
+        - Choose which entries to use for the corresponding query and data source
+        
+        Args:
+            all_arxiv_entries (List[List[Dict[str, Any]]]): The list of entries fetched from ArXiv for each user query.
+            all_ss_entries (List[List[Dict[str, Any]]]): The list of entries fetched from Semantic Scholar for each user query.
+            num_user_queries (int): The number of user queries.
+        """
+        
+        # Total entries should be NUM_QUERIES * NUM_ENTRIES_PER_QUERY at most.
+        all_entries = []
+        for i in range(self.max_total_entries):
+
+            # Choose whether to use the ArXiv or Semantic Scholar entries
+            use_arxiv = np.random.choice([True, False])
+
+            # Choose which query to use
+            query_idx = np.random.choice(num_user_queries)
+
+            print(i, use_arxiv, query_idx)
+
+            idx = i # Set the i-th entry to fetch
+
+            if use_arxiv:
+                arxiv_entries = all_arxiv_entries[query_idx]
+                num_arxiv_entries = len(arxiv_entries)
+                # Choose a random entry from the list of entries fetched for the chosen query if the index is out of bounds
+                if idx >= num_arxiv_entries:
+                    idx = np.random.choice(num_arxiv_entries) 
+
+                entry = all_arxiv_entries[query_idx][idx] # The i-th entry from the list of entries fetched for the chosen query
+            else:
+                ss_entries = all_ss_entries[query_idx]
+                num_ss_entries = len(ss_entries)
+                if idx >= num_ss_entries:
+                    idx = np.random.choice(num_ss_entries) 
+
+                entry = all_ss_entries[query_idx][idx]
+                
+            all_entries.append(entry)
+        return all_entries
+    
+    def retrieve_documents(self, user_query:str) -> List[Dict[str, Any]]:
+        """
+        Retrieves documents from all the data sources for the given user query.
+    
+        Args:
+            user_query (str): The user query to fetch data for.
+        """
+        # ArXiv fetching
+        arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
+                                                                        topic=user_query, 
+                                                                        max_results=self.max_total_entries
+                                                                        )
+        # Semantic Scholar fetching
+        ss_entries = self.ss_data_ingestion_pipeline.get_entries(
+                                                                topic=user_query, 
+                                                                max_results=self.max_total_entries,
+                                                                desired_total=self.max_total_entries
+                                                                )   
+        return arxiv_entries, ss_entries  
+
 
     def run(self, user_queries:List[str]) -> List[Dict[str, Any]]:
         """
@@ -35,30 +148,29 @@ class DataPipeline:
         Args:
             user_queries (List[str]): The list of user queries to fetch data for.
         """
-        all_entries = []
+        all_arxiv_entries = []
+        all_ss_entries = []
 
-        # Fetch entries from all data ingestion pipelines
+        # Fetch entries from all data ingestion pipelines for each user query
         for query in user_queries:
-            remaining_entries_left = self.max_total_entries - len(all_entries)
-            arxiv_entries = self.arxiv_data_ingestion_pipeline.fetch_entries(
-                                                                            topic=query, 
-                                                                            max_results=min(
-                                                                                            self.min_entries_per_query, 
-                                                                                            remaining_entries_left
-                                                                                            ) + 1 # +1 as this is non-inclusive
-                                                                            )
+            processed_query = self.process_query(query)
 
-            # ADD MORE DATA INGESTION PIPELINES HERE:
-            #########################################
-            #########################################
-            #########################################
+            arxiv_entries, ss_entries = self.retrieve_documents(processed_query)
 
-            # Add entries from all data ingestion pipelines into a single list
-            for entry in arxiv_entries:
-                if len(all_entries) >= self.max_total_entries:
-                    break
-                all_entries.append(entry)
+            print("Num fetched from ArXiv:", len(arxiv_entries))
+            print("Num fetched from Semantic Scholar:", len(ss_entries))
 
+            all_arxiv_entries.append(arxiv_entries)
+            all_ss_entries.append(ss_entries)
+        
+        selected_entries = self.select_entries(
+                                                all_arxiv_entries=all_arxiv_entries, 
+                                                all_ss_entries=all_ss_entries, 
+                                                num_user_queries=len(user_queries)
+                                                )
+
+        unique_entries = self.remove_duplicate_entries(selected_entries)
+        
         # Process all entries
-        all_entries = self.data_processing_pipeline.process(all_entries)
-        return all_entries
+        unique_entries = self.data_processing_pipeline.process(unique_entries)
+        return unique_entries

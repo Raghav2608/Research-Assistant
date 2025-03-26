@@ -30,8 +30,8 @@ class RetrievalEngine:
         if not os.path.exists(PERSIST_DIR):
             os.makedirs(PERSIST_DIR)
         
-        self.vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
-        
+        self.vector_store = Chroma(collection_name="production_collection",persist_directory=PERSIST_DIR, embedding_function=embeddings)
+    
         self.SEARCH_K = 5 # Number of documents to return
         self.FETCH_K = self.SEARCH_K * 3 # Number of documents to fetch
         self.initiate_vector_retriever()
@@ -58,17 +58,29 @@ class RetrievalEngine:
         """
         docs = []
         for entry in entries:
+            # "paper_link" for Semantic Scholar, "pdf_link" for ArXiv
+            link = entry.get("paper_link") or entry.get("pdf_link") 
+            
             doc = Document(
                         page_content=entry["summary"],   # Use entry["summary"] to skip parsing
                         metadata={
                                 "title": entry["title"],
                                 "published": entry["published"],
-                                "link": entry["pdf_link"],
+                                "link": link
                                 },
                         )
             docs.append(doc)
         return docs
     
+    def document_exists(self,link):
+        """Check if a document with the same link exists in ChromaDB."""
+        print(f"link : {link}")
+        search_results = self.vector_store.similarity_search("", k=1, filter={"link": link})
+        print(search_results)
+        print(bool(search_results))  # Filter by link
+        return bool(search_results)  # If a document with the same link exists, return True
+
+
     def split_and_add_documents(self, docs:List[Document]) -> None:
         """
         Splits the documents into chunks and adds the chunks to the ChromaDB.
@@ -76,10 +88,20 @@ class RetrievalEngine:
         Args:
             docs (List[Document]): A list of documents to split and add to the ChromaDB.
         """
-        all_splits = self.text_splitter.split_documents(docs)
+        
+        unique_docs = []
+        print(docs)
+        for doc in docs:
+            if not self.document_exists(doc.metadata["link"]):
+                unique_docs.append(doc)
+        
+        if len(unique_docs) == 0:
+            return
+        
+        all_splits = self.text_splitter.split_documents(unique_docs)
 
         # Index chunks into Chroma
-        self.vector_store.add_documents(all_splits)
+        self.vector_store.add_documents(documents=all_splits)
 
         # Update the vector retriever
         self.initiate_vector_retriever() 
