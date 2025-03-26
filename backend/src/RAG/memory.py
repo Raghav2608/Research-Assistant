@@ -68,7 +68,7 @@ class Memory():
                 session_id=session_id,
                 connection_string=self.uri,
                 database_name="chat-history",
-                collection_name="test_user_history_generator",
+                collection_name="user_history_generator",
                 history_size=10
             )
         return current_message
@@ -78,7 +78,7 @@ class Memory():
                 session_id=session_id,
                 connection_string=self.uri,
                 database_name="chat-history",
-                collection_name="test_user_history_responder",
+                collection_name="user_history_responder",
                 history_size=10
             )
         return current_message

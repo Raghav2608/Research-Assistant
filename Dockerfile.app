@@ -1,4 +1,4 @@
-# Use the official Python 3.9 slim image as a base
+# Use the official Python 3.11 slim image as a base
 FROM python:3.11-slim
 
 # Install system dependencies and Node.js (using NodeSource for Node 18)
