@@ -8,6 +8,9 @@ from collections import Counter
 import nltk
 import string
 
+from backend.src.data_processing.entry_processor import EntryProcessor
+from backend.src.data_ingestion.arxiv.utils import parse_papers, fetch_arxiv_papers
+
 nltk.download('punkt')
 nltk.download('stopwords')
 
