@@ -151,4 +151,4 @@ async def retrieve_documents(request:Request, query_request:ResearchPaperQuery) 
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run("app_retrieval:app", host="localhost", port=8002, reload=True)
+    uvicorn.run("app_retrieval:app", host="0.0.0.0", port=8002, reload=True)

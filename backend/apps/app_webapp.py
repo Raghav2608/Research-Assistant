@@ -1,6 +1,7 @@
 import uvicorn
 import requests
 import logging
+import os
 
 from fastapi import FastAPI, HTTPException, Body, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -12,6 +13,7 @@ from backend.src.constants import ENDPOINT_URLS
 from backend.src.backend.user_authentication.utils import validate_request
 from backend.src.backend.user_authentication.authentication_service import UserAuthenticationService
 from backend.src.backend.user_authentication.token_manager import verify_token
+from dotenv import load_dotenv
 
 app = FastAPI(title="Research Assistant API")
 logger = logging.getLogger('uvicorn.error')
@@ -22,7 +24,7 @@ user_authentication_service = UserAuthenticationService(is_testing=True)
 
 
 # Add CORS middleware to allow requests from the frontend (localhost)
-origins = [
+origins = [ os.environ.get("FRONTEND_URL"),
             "http://localhost:3000",
             "http://localhost:8080",
             "http://127.0.0.1",
@@ -186,4 +188,4 @@ async def query_system(request:Request, query_request:ResearchPaperQuery=Body(..
         raise HTTPException(status_code=500, detail=str(e))
     
 if __name__ == "__main__":
-    uvicorn.run("app_webapp:app", host="localhost", port=8000, reload=True)
+    uvicorn.run("app_webapp:app", host="0.0.0.0", port=8000, reload=True)

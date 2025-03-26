@@ -12,15 +12,19 @@ RUN apt-get update && \
 # Set the working directory
 WORKDIR /app
 
-# Copy the entire monorepo into the container
-COPY . .
+# Copy files required for dependencies
+COPY requirements.txt   requirements.txt
+COPY frontend/ frontend/
 
 # Install Python dependencies for the backend
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Install Node dependencies for the frontend
 RUN cd frontend && npm install
+
+# Copy the entire monorepo into the container
+COPY . .
 
 # Make the start script executable
 RUN chmod +x start-prod.sh
@@ -30,4 +34,4 @@ EXPOSE 3000
 
 
 # Start the processes using the start script
-CMD ["bash", "start-prod.sh"]
+CMD ["bash", "start-dev.sh"]
