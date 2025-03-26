@@ -9,8 +9,16 @@ export interface ChatlogProps {
   isLoading: boolean;
 }
 
-const WELCOME_TEXT =
-  'Hi there I\'m your personal research assitant. Please ask me anything about academic research. For example "What are the latest updates in the transformer model world?". In return I will provide a summary of what I found alongside the sources I used.';
+const WELCOME_TEXT = `Hello and welcome! I'm your personal research assistant, here to help you navigate the world of academic research with ease. Ask me anything about the latest studies, breakthroughs, or trends, and I'll provide you with a clear summary and the sources I used.
+
+For example, you might ask:
+
+"What are the latest updates in transformer models?"
+"Can you summarize recent advancements in computer vision?"
+"What are the emerging trends in renewable energy research?"
+
+Feel free to ask about any academic topic you're curious about, and let's start learning together!`;
+
 export default function Chatlog({ messages, isLoading }: ChatlogProps) {
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -30,10 +38,13 @@ export default function Chatlog({ messages, isLoading }: ChatlogProps) {
           </div>
         );
       })}
-      {isLoading
-        ? <MessageBubble
-        msg={{ message: "Answering your question...", sender: Sender.Bot }}/>
-        : ""}
+      {isLoading ? (
+        <MessageBubble
+          msg={{ message: "Answering your question...", sender: Sender.Bot }}
+        />
+      ) : (
+        ""
+      )}
     </div>
   );
 }
