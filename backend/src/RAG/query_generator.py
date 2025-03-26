@@ -63,15 +63,6 @@ class ResearchQueryGenerator:
             history_messages_key="history"
             )
 
-    def embed_query_in_prompt(self, query:str) -> str:
-        """
-        Embeds the query using the LLM model.
-        
-        Args:
-            query (str): The query to embed.
-        """
-        return self.system_prompt_template.format(query=query)
-
     def generate(self, user_prompt:str) -> List[str]:
         """
         Generates multiple variations of a research query while handling edge cases.
